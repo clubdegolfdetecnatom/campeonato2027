@@ -203,6 +203,8 @@ const SB_CLAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const SB_FOTOS = SB_URL + '/storage/v1/object/public';
 const ARCHIVO_TEMPORADA = 'https://clubdegolfdetecnatom.github.io/temporada' + TEMPORADA + '.html';
 
+/* el enlace del correo de invitación o de "olvidé mi contraseña" debe acabar en el formulario de contraseña */
+const ENLACE_CORREO = /type=(invite|recovery)/.test(location.hash);
 const sb = window.supabase.createClient(SB_URL, SB_CLAVE, { auth: { persistSession: true, detectSessionInUrl: true } });
 
 /* ---------- estado ---------- */
@@ -379,7 +381,8 @@ async function pintar() {
   document.getElementById('anio-boton').textContent = TEMPORADA;
   try {
     let html;
-    if (r[0] === 'admin') html = D.admin ? vistaAdmin(r.slice(1)) : vistaEntrar(r[1]);
+    if (r[0] === 'admin' && r[1] === 'nueva-clave' && D.email) html = vistaClave();
+    else if (r[0] === 'admin') html = D.admin ? vistaAdmin(r.slice(1)) : vistaEntrar(r[1]);
     else if (r[0] === 'c') html = vistaCompeticion(competicion(r[1]), r[2] || '');
     else if (r[0] === 'apuntarse') html = vistaApuntarse(dia(r[1]));
     else if (r[0] === 'handicaps') html = vistaHandicaps();
@@ -560,7 +563,13 @@ function vistaFotos() {
 /* ---------- administración ---------- */
 function vistaEntrar(modo) {
   if (D.email && !D.admin) return '<section class="tarjeta tarjeta-pad" style="max-width:440px;margin:24px auto;display:flex;flex-direction:column;gap:12px"><h1 style="font-size:24px">Sin permiso</h1><p style="margin:0">Has entrado como ' + esc(D.email) + ', que no está en la lista de administradores.</p><button class="boton boton-sec" data-accion="salir">Salir</button></section>';
-  if (modo === 'nueva-clave') return '<form data-form="nueva-clave" class="tarjeta tarjeta-pad" style="max-width:440px;margin:24px auto;display:flex;flex-direction:column;gap:12px"><h1 style="font-size:24px">Nueva contraseña</h1><label class="campo">Contraseña nueva (8 caracteres o más)<input type="password" name="clave" minlength="8" required autocomplete="new-password"/></label><button class="boton">Guardar</button></form>';
+  if (modo === 'nueva-clave') return '<div class="tarjeta vacio">El enlace del correo ha caducado o ya se usó. Escribe tu correo en Administración y pulsa «He olvidado mi contraseña» para recibir otro.</div>' + vistaEntrar();
+  return vistaEntrarForm();
+}
+function vistaClave() {
+  return '<form data-form="nueva-clave" class="tarjeta tarjeta-pad" style="max-width:440px;margin:24px auto;display:flex;flex-direction:column;gap:12px"><h1 style="font-size:24px">Nueva contraseña</h1><label class="campo">Contraseña nueva (8 caracteres o más)<input type="password" name="clave" minlength="8" required autocomplete="new-password"/></label><button class="boton">Guardar</button></form>';
+}
+function vistaEntrarForm() {
   return '<section style="max-width:440px;width:100%;margin:12px auto;display:flex;flex-direction:column;gap:14px;text-align:center"><img src="cdgdt.jpg" alt="" width="72" height="72" style="margin:0 auto"/><h1 style="font-size:28px">Administración</h1><p style="margin:0;color:var(--gris)">Solo para gestionar la temporada. Para apuntarte como jugador no hace falta entrar.</p></section>' +
     '<form data-form="entrar" class="tarjeta tarjeta-pad" style="max-width:440px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px">' +
     '<label class="campo">Correo<input type="email" name="email" required autocomplete="username"/></label>' +
@@ -570,7 +579,7 @@ function vistaEntrar(modo) {
 function cabeceraAdmin(activa) {
   const pest = [['jugadores', 'Jugadores'], ['competiciones', 'Competiciones'], ['resultados', 'Resultados'], ['fotos', 'Fotos']];
   return '<section class="cabecera-admin"><div style="flex:1 1 220px"><h1>Administración ' + TEMPORADA + '</h1><div class="quien">' + esc(D.email) + '</div></div>' +
-    '<button class="boton boton-pequeno" style="background:rgba(255,255,255,0.14)" data-accion="salir">Salir</button>' +
+    '<a class="boton boton-pequeno" style="background:rgba(255,255,255,0.14)" href="#/admin/nueva-clave">Cambiar contraseña</a><button class="boton boton-pequeno" style="background:rgba(255,255,255,0.14)" data-accion="salir">Salir</button>' +
     '<nav class="pestanas" style="flex-basis:100%;margin-top:0" aria-label="Secciones de administración">' + pest.map(([h, t]) => '<a href="#/admin/' + h + '" class="' + (activa === h ? 'activa' : '') + '">' + t + '</a>').join('') + '</nav></section>';
 }
 function vistaAdmin(r) {
@@ -864,6 +873,7 @@ sb.auth.onAuthStateChange(evt => { if (evt === 'PASSWORD_RECOVERY') location.has
   try { await comprobarAdmin(); await cargar(); }
   catch (e) { console.error(e); document.getElementById('app').innerHTML = '<div class="tarjeta vacio">No se ha podido cargar la temporada. Comprueba la conexión y vuelve a intentarlo.</div>'; return; }
   document.getElementById('pie-texto').textContent = (D.temporada.edicion ? D.temporada.edicion + ' Campeonato · ' : '') + 'Temporada ' + TEMPORADA;
+  if (ENLACE_CORREO && D.email) { history.replaceState(null, '', location.pathname + '#/admin/nueva-clave'); }
   pintar();
 })();
 </script>
