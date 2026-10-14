@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Temporada · Club de Golf de Tecnatom</title>
+<link rel="icon" href="cdgdt.jpg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=DM+Sans:wght@400;500;700&display=swap"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root {
+  --verde: #173A2C; --verde-hover: #0E271D; --fondo: #F3F5F1; --papel: #FFFFFF;
+  --tinta: #1B241F; --texto: #36423B; --gris: #56625B; --gris-claro: #7C877F;
+  --linea: #DDE3DC; --linea-suave: #EBEFEA; --tinte: #E6ECE6; --tinte-suave: #F1F5F1;
+  --oro: #D8BE7A; --oro-tinta: #14261D; --oro-oscuro: #6B5A1E; --oro-suave: #F6EFD9; --prox: #FBF1D6; --prox-tinta: #5C4A12;
+  --sobre-verde: #D5DED8; --azul: #2F5D8A; --azul-suave: #E6EEF6; --rojo: #A8322B; --rojo-suave: #F8E7E5;
+  --titulos: 'Bricolage Grotesque', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --texto-letra: 'DM Sans', 'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font-family: var(--texto-letra); font-size: 15px; line-height: 1.45; min-height: 100vh; display: flex; flex-direction: column; }
+a { color: var(--verde); } a:hover { color: var(--verde-hover); }
+button, select, input { font: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--oro-oscuro); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--titulos); margin: 0; letter-spacing: -0.01em; }
+.oculto { display: none !important; }
+
+/* cabecera común de la web */
+.contenedor { width: 100%; max-width: 1184px; margin: 0 auto; padding-left: 32px; padding-right: 32px; }
+.cabecera { background: var(--papel); border-bottom: 1px solid var(--linea); }
+.cabecera .contenedor { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding-top: 16px; padding-bottom: 16px; }
+.marca { display: flex; align-items: center; gap: 12px; color: var(--tinta); text-decoration: none; }
+.marca img { width: 52px; height: 52px; object-fit: contain; display: block; }
+.marca-nombre { display: block; font-family: var(--titulos); font-weight: 700; font-size: 22px; line-height: 1.15; }
+.marca-lema { display: block; font-size: 13px; color: var(--gris); }
+.menu { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 15px; margin-left: auto; }
+.menu a { color: var(--tinta); text-decoration: none; padding: 11px 18px; border-radius: 999px; white-space: nowrap; }
+.menu a:hover { background: var(--tinte); }
+.boton-temporada { background: var(--verde); color: #FFF; font-weight: 700; font-size: 15px; text-decoration: none; padding: 11px 20px; border-radius: 999px; white-space: nowrap; }
+.boton-temporada:hover { background: var(--verde-hover); color: #FFF; }
+.boton-admin { width: 44px; height: 44px; border-radius: 999px; background: var(--tinte); display: inline-flex; align-items: center; justify-content: center; }
+@media (max-width: 920px) {
+  .cabecera .contenedor { padding-bottom: 0; row-gap: 6px; }
+  .boton-temporada { order: 2; margin-left: auto; }
+  .boton-admin { order: 2; }
+  .menu { order: 3; flex-basis: 100%; margin-left: -10px; padding-bottom: 8px; overflow-x: auto; scrollbar-width: none; }
+}
+@media (max-width: 760px) {
+  .contenedor { padding-left: 16px; padding-right: 16px; }
+  .cabecera .contenedor { padding-top: 12px; column-gap: 8px; }
+  .marca img { width: 44px; height: 44px; } .marca-nombre { font-size: 17px; } .marca-lema { font-size: 12px; }
+  .menu { gap: 2px; margin-left: -8px; } .menu a { padding: 11px 12px; }
+  .boton-temporada { padding: 10px 16px; }
+}
+@media (max-width: 480px) { .solo-ancho { display: none; } }
+@media (max-width: 350px) { .marca-nombre { font-size: 15px; } }
+
+/* zona principal */
+main { flex: 1 0 auto; width: 100%; max-width: 1184px; margin: 0 auto; padding: 20px 32px 48px; display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 760px) { main { padding: 14px 12px 40px; gap: 12px; } }
+.bloque { background: var(--verde); color: #FFF; border-radius: 28px; padding: 24px 28px 18px; display: flex; flex-direction: column; gap: 6px; }
+.bloque h1 { color: #FFF; font-size: clamp(28px, 4.4vw, 44px); line-height: 1.05; }
+.bloque .detalle { color: var(--sobre-verde); font-size: 15px; }
+.pastilla { align-self: flex-start; display: inline-block; border-radius: 999px; padding: 3px 12px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.p-oro { background: var(--oro); color: var(--oro-tinta); }
+.p-gris { background: var(--tinte); color: #4A564F; }
+.p-prox { background: var(--prox); color: var(--prox-tinta); }
+.p-blanca { background: #FFF; color: var(--tinta); }
+.pestanas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.pestanas a { background: rgba(255,255,255,0.12); color: #FFF; text-decoration: none; font-weight: 600; font-size: 14px; padding: 11px 16px; border-radius: 999px; }
+.pestanas a.activa { background: #FFF; color: var(--verde); font-weight: 700; }
+@media (max-width: 760px) { .bloque { border-radius: 22px; padding: 18px 18px 14px; } .pestanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 12px -8px 0; padding: 0 8px; } .pestanas a { white-space: nowrap; } }
+.aviso-cierre { margin-top: 10px; align-self: flex-start; background: rgba(255,255,255,0.12); color: #FFF; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; text-decoration: none; }
+
+.columnas { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.col-principal { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.col-lateral { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.tarjeta { background: var(--papel); border: 1px solid var(--linea); border-radius: 20px; }
+.tarjeta-pad { padding: 16px 18px; }
+.tarjeta-destacada { border: 2px solid var(--verde); }
+.tarjeta h2 { font-size: 19px; }
+.subtitulo { font-size: 13px; color: var(--gris); }
+.etiqueta { font-size: 13px; font-weight: 700; color: var(--oro-oscuro); }
+.titulo-seccion { font-size: 21px; margin: 6px 4px 0; }
+.lista > * + * { border-top: 1px solid var(--linea-suave); }
+.fila { display: flex; align-items: center; gap: 12px; padding: 11px 16px; color: var(--tinta); text-decoration: none; min-height: 48px; }
+a.fila:hover { background: var(--tinte-suave); color: var(--tinta); }
+.fila .crece { flex: 1 1 auto; min-width: 0; }
+.fila .nombre { display: block; font-weight: 700; font-size: 15px; }
+.fila .sub { display: block; font-size: 13px; color: var(--gris); }
+.fila.yo { background: var(--oro-suave); }
+.fila.atenuada { opacity: 0.6; }
+.puesto { width: 28px; height: 28px; border-radius: 999px; background: var(--tinte); color: var(--verde); font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.puesto.oro { background: var(--oro); color: var(--oro-tinta); }
+.puesto.simple { background: none; color: var(--gris-claro); }
+.puntos { font-family: var(--titulos); font-weight: 700; font-size: 22px; }
+.puntos.lider { color: var(--oro-oscuro); }
+.boton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; background: var(--verde); color: #FFF; text-decoration: none; font-weight: 700; font-size: 15px; padding: 12px 22px; border-radius: 999px; min-height: 44px; }
+.boton:hover { background: var(--verde-hover); color: #FFF; }
+.boton[disabled] { opacity: 0.55; cursor: not-allowed; }
+.boton-sec { background: var(--tinte); color: var(--verde); }
+.boton-sec:hover { background: #D9E2D9; color: var(--verde); }
+.boton-peligro { background: var(--rojo-suave); color: var(--rojo); }
+.boton-peligro:hover { background: #F2D6D3; color: var(--rojo); }
+.boton-linea { background: #FFF; color: var(--verde); border: 1.5px dashed var(--gris); }
+.boton-pequeno { padding: 8px 14px; font-size: 14px; min-height: 40px; }
+.ancho { width: 100%; }
+.enlace { font-weight: 700; font-size: 14px; display: inline-block; padding: 10px 0; }
+.segmentos { display: flex; gap: 4px; background: var(--papel); border: 1px solid var(--linea); border-radius: 999px; padding: 4px; overflow-x: auto; scrollbar-width: none; }
+.segmentos a, .segmentos button { flex: 1 0 auto; text-align: center; border: none; background: transparent; color: var(--gris); text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 14px; border-radius: 999px; white-space: nowrap; }
+.segmentos .activa { background: var(--verde); color: #FFF; font-weight: 700; }
+.alternar { display: inline-flex; gap: 4px; background: var(--tinte); border-radius: 999px; padding: 4px; }
+.alternar button { border: none; background: transparent; color: var(--gris); font-weight: 600; font-size: 14px; padding: 9px 14px; border-radius: 999px; }
+.alternar .activa { background: #FFF; color: var(--verde); font-weight: 700; }
+.nota { display: flex; gap: 8px; align-items: flex-start; background: var(--oro-suave); border-radius: 14px; padding: 10px 12px; font-size: 14px; color: var(--texto); }
+.vacio { padding: 32px 18px; text-align: center; color: var(--gris); }
+.pildoras { display: flex; flex-wrap: wrap; gap: 6px; }
+.pildora { background: var(--tinte); color: var(--verde); border-radius: 999px; padding: 4px 11px; font-size: 13px; }
+.pildora.m { background: var(--azul-suave); color: var(--azul); }
+label.campo { display: flex; flex-direction: column; gap: 5px; font-size: 14px; font-weight: 700; }
+.campo input, .campo select, input.celda, select.celda { font-weight: 500; font-size: 16px; padding: 10px 12px; border: 1.5px solid var(--linea); border-radius: 12px; min-height: 44px; background: #FFF; color: var(--tinta); width: 100%; }
+.campo input:focus, .campo select:focus, input.celda:focus { border-color: var(--verde); outline: none; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.cifra { background: var(--tinte-suave); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; }
+.cifra span { font-size: 12px; color: var(--gris); } .cifra b { font-family: var(--titulos); font-size: 20px; }
+.tabla-caja { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--gris); background: var(--tinte-suave); padding: 9px 12px; white-space: nowrap; }
+td { padding: 8px 12px; border-top: 1px solid var(--linea-suave); vertical-align: middle; }
+td.num, th.num { text-align: center; }
+tr.dudoso td { background: var(--oro-suave); }
+input.celda { width: 72px; text-align: center; font-weight: 700; padding: 8px 6px; min-height: 40px; }
+input.celda.dudosa { border: 2px solid var(--oro); }
+.galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
+.galeria button { padding: 0; border: none; background: #DCE3DB; border-radius: 10px; overflow: hidden; aspect-ratio: 4 / 3; }
+.galeria img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto-admin { position: relative; }
+.foto-admin.oculta img { opacity: 0.4; }
+.cabecera-admin { background: var(--verde); color: #FFF; border-radius: 22px; padding: 14px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.cabecera-admin h1 { color: #FFF; font-size: 22px; }
+.cabecera-admin .quien { color: var(--sobre-verde); font-size: 13px; }
+.pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pasos li { display: flex; gap: 10px; align-items: center; font-size: 14.5px; }
+.paso { width: 26px; height: 26px; border-radius: 999px; background: var(--verde); color: #FFF; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.paso.pend { background: var(--oro-suave); color: var(--oro-oscuro); border: 2px solid var(--oro); }
+#aviso { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 32px); padding: 11px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; color: #FFF; box-shadow: 0 8px 24px rgba(10,20,15,0.25); }
+#aviso.ok { background: var(--verde); } #aviso.mal { background: var(--rojo); }
+#visor { position: fixed; inset: 0; background: rgba(10,20,15,.94); z-index: 60; display: flex; align-items: center; justify-content: center; }
+#visor img { max-width: 94vw; max-height: 84vh; border-radius: 10px; }
+#visor button { position: absolute; color: #FFF; background: none; border: none; font-size: 40px; padding: 8px 16px; }
+#visor .cerrar { top: 8px; right: 8px; font-size: 34px; }
+#visor .ant { left: 0; top: 50%; transform: translateY(-50%); } #visor .sig { right: 0; top: 50%; transform: translateY(-50%); }
+#visor .pie { position: absolute; bottom: 14px; left: 12px; right: 12px; text-align: center; color: rgba(255,255,255,.88); font-size: 14px; }
+.cargando { padding: 48px; text-align: center; color: var(--gris); }
+.pie { border-top: 1px solid var(--linea); }
+.pie .contenedor { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding-top: 24px; padding-bottom: 24px; font-size: 14px; color: var(--gris); }
+.pie-nombre { font-family: var(--titulos); font-weight: 700; font-size: 18px; color: var(--tinta); }
+</style>
+</head>
+<body>
+<header class="cabecera">
+  <div class="contenedor">
+    <a class="marca" href="https://clubdegolfdetecnatom.github.io/">
+      <img src="cdgdt.jpg" alt="Escudo del Club de Golf de Tecnatom" width="52" height="52"/>
+      <span><span class="marca-nombre">Club de Golf de Tecnatom</span><span class="marca-lema">Desde 1993 · Madrid</span></span>
+    </a>
+    <nav class="menu" aria-label="Secciones de la web">
+      <a href="https://clubdegolfdetecnatom.github.io/">Inicio</a>
+      <a href="https://clubdegolfdetecnatom.github.io/historia.html">Historia</a>
+      <a href="https://clubdegolfdetecnatom.github.io/temporadas.html">Temporadas</a>
+      <a href="https://clubdegolfdetecnatom.github.io/galeria.html">Galería</a>
+    </nav>
+    <a class="boton-temporada" href="#/"><span class="solo-ancho">Temporada </span><span id="anio-boton">2027</span></a>
+  </div>
+</header>
+<main id="app"><div class="cargando">Cargando la temporada…</div></main>
+<footer class="pie"><div class="contenedor"><div class="pie-nombre">Club de Golf de Tecnatom</div><div><span id="pie-texto">Portal de la temporada</span> · <a href="#/admin">Administración</a></div></div></footer>
+<div id="aviso" class="oculto" role="status"></div>
+<div id="visor" class="oculto">
+  <button class="cerrar" data-accion="visor-cerrar" aria-label="Cerrar">&times;</button>
+  <button class="ant" data-accion="visor-mover" data-paso="-1" aria-label="Anterior">&#8249;</button>
+  <img id="visor-img" alt=""/>
+  <button class="sig" data-accion="visor-mover" data-paso="1" aria-label="Siguiente">&#8250;</button>
+  <div class="pie" id="visor-pie"></div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Portal de la temporada · Club de Golf de Tecnatom
+   Toda la información vive en la base de datos (Supabase). Este fichero
+   solo la muestra y, para los administradores, la cambia.
+   La temporada que muestra es la de TEMPORADA (cambiarla al copiar el portal).
+   ===================================================================== */
+const TEMPORADA = 2027;
+const SB_URL = 'https://peztstoiswhmlmpyhefl.supabase.co';
+const SB_CLAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlenRzdG9pc3dobWxtcHloZWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1Mzk5MTMsImV4cCI6MjA5NzExNTkxM30.D-e9iyp8tXU_mQ8Jd7fx3qL36cyW6hOdJF7hSIAnxqU';   // clave pública de solo lectura; la seguridad la pone la base de datos
+const SB_FOTOS = SB_URL + '/storage/v1/object/public';
+const ARCHIVO_TEMPORADA = 'https://clubdegolfdetecnatom.github.io/temporada' + TEMPORADA + '.html';
+
+const sb = window.supabase.createClient(SB_URL, SB_CLAVE, { auth: { persistSession: true, detectSessionInUrl: true } });
+
+/* ---------- estado ---------- */
+const D = {
+  temporada: null, competiciones: [], dias: [], jugadores: [], tj: [], inscripciones: [], resultados: [],
+  equipos: [], equiposJug: [], premios: [], eventosFotos: [], fotos: [],
+  admin: false, email: null, licencias: {}, borradores: [], fotosRes: []
+};
+const V = { tipo: 'stableford' };      // pestaña de clasificación elegida
+let yo = leer('tecnatom_jugador_id');
+
+/* ---------- utilidades ---------- */
+function leer(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function hoyISO() { const p = madridPartes(new Date()); return p.y + '-' + dos(p.m) + '-' + dos(p.d); }
+function dos(n) { return String(n).padStart(2, '0'); }
+function madridPartes(fecha) {
+  const f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+  const o = {}; f.formatToParts(fecha).forEach(p => { o[p.type] = Number(p.value); });
+  return { y: o.year, m: o.month, d: o.day, h: o.hour, mi: o.minute };
+}
+/* fecha y hora "de pared" en Madrid → instante real */
+function madrid(iso, hhmm) {
+  const [y, m, d] = iso.split('-').map(Number); const [h, mi] = String(hhmm || '00:00').split(':').map(Number);
+  const supuesto = Date.UTC(y, m - 1, d, h, mi);
+  const p = madridPartes(new Date(supuesto));
+  const desfase = Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - supuesto;
+  return new Date(supuesto - desfase);
+}
+function sumarDias(iso, n) { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d + n)); return t.getUTCFullYear() + '-' + dos(t.getUTCMonth() + 1) + '-' + dos(t.getUTCDate()); }
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+function fechaCorta(iso) { if (!iso) return 'fecha por definir'; const [y, m, d] = iso.split('-').map(Number); return d + ' ' + MESES[m - 1]; }
+function fechaLarga(iso) { if (!iso) return 'Fecha por definir'; const [y, m, d] = iso.split('-').map(Number); const s = SEMANA[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]; return s.charAt(0).toUpperCase() + s.slice(1) + ' ' + d + ' de ' + MESES_L[m - 1]; }
+function momento(fecha) { const p = madridPartes(fecha); const s = SEMANA[new Date(Date.UTC(p.y, p.m - 1, p.d)).getUTCDay()]; return s + ' ' + p.d + ' de ' + MESES_L[p.m - 1] + ' a las ' + dos(p.h) + ':' + dos(p.mi); }
+function hcpTxt(h) { return Number(h).toFixed(1).replace('.', ','); }
+function nombreCorto(n) { const p = String(n).trim().split(/\s+/); return p.length >= 3 ? p.slice(0, -1).join(' ') : p.join(' '); }
+function iniciales(n) { const p = String(n).split(' '); return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase(); }
+function urlFoto(f, mini) { const r = (mini && f.ruta_mini) ? f.ruta_mini : f.ruta; return SB_FOTOS + '/' + encodeURIComponent(f.bucket) + '/' + String(r).split('/').map(encodeURIComponent).join('/'); }
+function aviso(txt, mal) { const a = document.getElementById('aviso'); a.textContent = txt; a.className = mal ? 'mal' : 'ok'; clearTimeout(aviso.t); aviso.t = setTimeout(() => a.classList.add('oculto'), 3500); }
+function errorLegible(e) {
+  const m = String((e && (e.message || e.error_description)) || e);
+  if (/row-level security|permission denied|42501/i.test(m)) return 'No está permitido (fuera de plazo o sin permiso).';
+  if (/duplicate key/i.test(m)) return 'Ya estaba hecho.';
+  if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sin conexión. Vuelve a intentarlo.';
+  return m.slice(0, 160);
+}
+
+/* ---------- datos de consulta ---------- */
+const jugador = id => D.jugadores.find(j => j.id === Number(id));
+const competicion = id => D.competiciones.find(c => c.id === Number(id));
+const dia = id => D.dias.find(d => d.id === Number(id));
+const diasDe = c => D.dias.filter(d => d.competicion_id === c.id).sort((a, b) => a.orden - b.orden);
+const enAlta = () => D.tj.filter(t => t.activo).map(t => jugador(t.jugador_id)).filter(Boolean).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+const inscritos = d => D.inscripciones.filter(i => i.dia_id === d.id).map(i => Object.assign({}, jugador(i.jugador_id), { comentario: i.comentario })).filter(j => j.id).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+const apuntado = (d, jid) => D.inscripciones.some(i => i.dia_id === d.id && i.jugador_id === Number(jid));
+const cuotaPagada = jid => (D.tj.find(t => t.jugador_id === jid) || {}).cuota_pagada;
+
+function plazo(d) {
+  const c = competicion(d.competicion_id);
+  if (!d.fecha || !d.campo || !c) return null;
+  const abre = d.insc_abre ? new Date(d.insc_abre) : madrid(sumarDias(d.fecha, -c.insc_abre_dias), '00:00');
+  const cierra = d.insc_cierra ? new Date(d.insc_cierra) : madrid(sumarDias(d.fecha, -c.insc_cierra_dias), String(c.insc_cierra_hora || '14:00').slice(0, 5));
+  const ahora = new Date();
+  return { abre, cierra, abierta: ahora >= abre && ahora < cierra, antes: ahora < abre };
+}
+function hcpJuego(j, d) {
+  const h = Math.min(Number(j.hcp), 36);
+  const cr = j.sexo === 'M' ? d.cr_m : d.cr_h, sl = j.sexo === 'M' ? d.slope_m : d.slope_h;
+  if (cr == null || sl == null || d.par == null) return null;
+  return Math.round(h * (sl / 113) + (Number(cr) - d.par));
+}
+function estado(c) {
+  const ds = diasDe(c), con = ds.filter(d => d.fecha).sort((a, b) => a.fecha.localeCompare(b.fecha)), hoy = hoyISO();
+  if (!con.length) return { txt: 'Fecha por definir', cls: 'p-prox' };
+  if (con.some(d => (plazo(d) || {}).abierta)) return { txt: 'Inscripción abierta', cls: 'p-oro' };
+  const ini = con[0].fecha, fin = con[con.length - 1].fecha;
+  if (fin < hoy && con.length === ds.length) return { txt: 'Terminada', cls: 'p-gris' };
+  if (ini <= hoy) return { txt: 'En juego', cls: 'p-oro' };
+  return { txt: 'Próxima', cls: 'p-prox' };
+}
+function cuandoComp(c) {
+  const ds = diasDe(c).filter(d => d.fecha);
+  if (!ds.length) return 'Fecha por definir';
+  if (c.tipo === 'liga') return ds.length + (ds.length === 1 ? ' jornada' : ' jornadas') + ' · ' + fechaCorta(ds[0].fecha) + ' – ' + fechaCorta(ds[ds.length - 1].fecha);
+  const campos = [...new Set(ds.map(d => d.campo).filter(Boolean))].join(' y ');
+  return ds.map(d => fechaCorta(d.fecha)).join(', ') + (campos ? ' · ' + campos : '');
+}
+function nombreDia(d) { const c = competicion(d.competicion_id); return c.tipo === 'liga' ? 'Jornada ' + d.orden : (diasDe(c).length > 1 ? 'Día ' + d.orden : ''); }
+
+/* Clasificación de una competición (suma o N mejores tarjetas). tipo: 'stableford' | 'scratch' */
+function clasificacion(c, tipo) {
+  const ids = diasDe(c).map(d => d.id);
+  const por = new Map();
+  D.resultados.filter(r => ids.includes(r.dia_id) && r[tipo] != null).forEach(r => {
+    if (!por.has(r.jugador_id)) por.set(r.jugador_id, []);
+    por.get(r.jugador_id).push(r[tipo]);
+  });
+  const filas = [...por.entries()].map(([jid, ps]) => {
+    const j = jugador(jid) || { nombre: '?', hcp: 99 };
+    const cuentan = c.tipo === 'liga' ? [...ps].sort((a, b) => b - a).slice(0, c.mejores_tarjetas || 4) : ps;
+    return { id: jid, nombre: j.nombre, hcp: Number(j.hcp), sexo: j.sexo, total: cuentan.reduce((s, v) => s + v, 0), jugadas: ps.length };
+  });
+  return filas.sort((a, b) => b.total !== a.total ? b.total - a.total : (tipo === 'stableford' ? a.hcp - b.hcp : b.hcp - a.hcp));
+}
+/* Premios no acumulables: primero scratch; en hándicap se salta a quien ya tiene premio */
+function premiosCalculados(c) {
+  const out = [], conPremio = new Set();
+  clasificacion(c, 'scratch').slice(0, c.premios_scratch).forEach((f, i) => { out.push({ categoria: 'scratch', puesto: i + 1, jugador_id: f.id, nombre: 'Premio ' + (i + 1) + '.º scratch', total: f.total }); conPremio.add(f.id); });
+  let n = 0;
+  clasificacion(c, 'stableford').forEach((f, i) => {
+    if (n >= c.premios_hcp || conPremio.has(f.id)) return;
+    n++; out.push({ categoria: 'hcp', puesto: i + 1, jugador_id: f.id, nombre: 'Premio ' + n + '.º hándicap', total: f.total });
+  });
+  return out;
+}
+function resultadoRyder(c) {
+  const eqs = D.equipos.filter(e => e.competicion_id === c.id && e.puntos != null);
+  const bandos = [...new Set(eqs.map(e => e.bando))];
+  return bandos.map(b => {
+    const ps = eqs.filter(e => e.bando === b).map(e => Number(e.puntos));
+    const v = c.ryder_regla === 'suma' ? ps.reduce((s, x) => s + x, 0) : ps.reduce((s, x) => s + x, 0) / ps.length;
+    return { bando: b, puntos: Math.round(v * 10) / 10, equipos: ps.length };
+  }).sort((a, b) => b.puntos - a.puntos);
+}
+
+/* ---------- carga ---------- */
+async function q(consulta) { const { data, error } = await consulta; if (error) throw error; return data || []; }
+async function cargar() {
+  const [temps, comps, tj, jugs] = await Promise.all([
+    q(sb.from('temporadas').select('anio,edicion,estado').eq('anio', TEMPORADA)),
+    q(sb.from('competiciones').select('*').eq('temporada', TEMPORADA).order('orden')),
+    q(sb.from('temporada_jugadores').select('jugador_id,activo,baja_desde,cuota_pagada').eq('temporada', TEMPORADA)),
+    q(sb.from('jugadores').select('id,nombre,sexo,hcp'))
+  ]);
+  D.temporada = temps[0] || { anio: TEMPORADA, edicion: '', estado: 'preparacion' };
+  D.competiciones = comps; D.tj = tj; D.jugadores = jugs.map(j => Object.assign(j, { hcp: Number(j.hcp) }));
+  const cids = comps.map(c => c.id);
+  D.dias = cids.length ? await q(sb.from('dias').select('*').in('competicion_id', cids)) : [];
+  const dids = D.dias.map(d => d.id);
+  const [ins, res, eqs, prem, evs] = await Promise.all([
+    dids.length ? q(sb.from('inscripciones_dias').select('dia_id,jugador_id,comentario').in('dia_id', dids)) : [],
+    dids.length ? q(sb.from('resultados_dias').select('dia_id,jugador_id,stableford,scratch,dudoso,publicado').in('dia_id', dids)) : [],
+    cids.length ? q(sb.from('equipos').select('*').in('competicion_id', cids)) : [],
+    cids.length ? q(sb.from('premios').select('*').in('competicion_id', cids)) : [],
+    q(sb.from('eventos_fotos').select('id,anio,nombre,meta,fecha,competicion_id').eq('anio', TEMPORADA))
+  ]);
+  D.inscripciones = ins; D.equipos = eqs; D.premios = prem; D.eventosFotos = evs;
+  D.resultados = res.filter(r => r.publicado); D.borradores = res;
+  const eqIds = eqs.map(e => e.id);
+  D.equiposJug = eqIds.length ? await q(sb.from('equipos_jugadores').select('equipo_id,jugador_id').in('equipo_id', eqIds)) : [];
+  const evIds = evs.map(e => e.id);
+  D.fotos = evIds.length ? await q(sb.from('fotos').select('id,evento_id,bucket,ruta,ruta_mini,pie,orden,visible').in('evento_id', evIds).order('orden')) : [];
+  if (D.admin) {
+    const lic = await q(sb.from('jugadores').select('id,licencia'));
+    D.licencias = Object.fromEntries(lic.map(x => [x.id, x.licencia]));
+    D.fotosRes = dids.length ? await q(sb.from('fotos_resultados').select('*').in('dia_id', dids).order('id')) : [];
+  }
+}
+async function comprobarAdmin() {
+  const { data } = await sb.auth.getSession();
+  const s = data && data.session;
+  D.email = s ? s.user.email : null;
+  D.admin = false;
+  if (s) { const { data: ok } = await sb.rpc('es_admin'); D.admin = ok === true; }
+}
+
+/* ---------- enrutado ---------- */
+function ruta() { return (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean); }
+async function pintar() {
+  const r = ruta(), app = document.getElementById('app');
+  document.getElementById('anio-boton').textContent = TEMPORADA;
+  try {
+    let html;
+    if (r[0] === 'admin') html = D.admin ? vistaAdmin(r.slice(1)) : vistaEntrar(r[1]);
+    else if (r[0] === 'c') html = vistaCompeticion(competicion(r[1]), r[2] || '');
+    else if (r[0] === 'apuntarse') html = vistaApuntarse(dia(r[1]));
+    else if (r[0] === 'handicaps') html = vistaHandicaps();
+    else if (r[0] === 'calendario') html = vistaCalendario();
+    else if (r[0] === 'fotos') html = vistaFotos();
+    else html = vistaTemporada();
+    app.innerHTML = html;
+  } catch (e) {
+    console.error(e);
+    app.innerHTML = '<div class="tarjeta vacio">No se ha podido mostrar esta página. <a href="#/">Volver al inicio</a></div>';
+  }
+}
+window.addEventListener('hashchange', () => { pintar(); window.scrollTo(0, 0); });
+
+/* ---------- piezas comunes ---------- */
+function bloqueTemporada(activa) {
+  const t = D.temporada, cerrada = t.estado === 'cerrada';
+  const pest = [['', 'Temporada'], ['handicaps', 'Hándicaps'], ['calendario', 'Calendario'], ['fotos', 'Fotos']];
+  return '<section class="bloque">' +
+    '<span class="pastilla p-oro">Temporada ' + TEMPORADA + (t.estado === 'preparacion' ? ' · en preparación' : '') + '</span>' +
+    '<h1>' + esc(t.edicion ? t.edicion + ' Campeonato' : 'Temporada ' + TEMPORADA) + '</h1>' +
+    (cerrada ? '<a class="aviso-cierre" href="' + ARCHIVO_TEMPORADA + '">Temporada cerrada · ver el archivo completo ›</a>' : '') +
+    '<nav class="pestanas" aria-label="Secciones del portal">' + pest.map(([h, t]) => '<a href="#/' + h + '" class="' + (activa === h ? 'activa' : '') + '">' + t + '</a>').join('') + '</nav>' +
+    '</section>';
+}
+function selectorQuienSoy() {
+  return '<label class="tarjeta tarjeta-pad campo"><span class="subtitulo" style="font-weight:700">¿Quién eres?</span>' +
+    '<select data-cambio="yo"><option value="">— Elige tu nombre —</option>' +
+    enAlta().map(j => '<option value="' + j.id + '"' + (String(j.id) === yo ? ' selected' : '') + '>' + esc(j.nombre) + ' · hcp ' + hcpTxt(j.hcp) + '</option>').join('') +
+    '</select></label>';
+}
+function filaCompeticion(c) {
+  const e = estado(c);
+  return '<a class="fila" href="#/c/' + c.id + '"><span class="crece"><span class="nombre">' + esc(c.nombre) + '</span><span class="sub">' + esc(cuandoComp(c)) + '</span></span><span class="pastilla ' + e.cls + '">' + e.txt + '</span></a>';
+}
+function proximaCita() {
+  const hoy = hoyISO();
+  const cand = D.dias.filter(d => d.fecha && d.fecha >= hoy && d.campo).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  return cand[0] || null;
+}
+function tarjetaCita(d) {
+  const c = competicion(d.competicion_id), p = plazo(d), n = inscritos(d).length;
+  const titulo = c.nombre + (nombreDia(d) ? ' · ' + nombreDia(d) : '');
+  let estadoTxt = '', boton = '';
+  if (p && p.abierta) {
+    estadoTxt = 'Puedes apuntarte hasta el ' + momento(p.cierra);
+    boton = '<a class="boton ancho" href="#/apuntarse/' + d.id + '">' + (yo && apuntado(d, yo) ? 'Ver mi inscripción' : 'Apuntarme') + '</a>';
+  } else if (p && p.antes) estadoTxt = 'La inscripción se abre el ' + momento(p.abre);
+  else estadoTxt = 'Inscripción cerrada';
+  return '<section class="tarjeta tarjeta-pad tarjeta-destacada" style="display:flex;flex-direction:column;gap:8px">' +
+    '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span class="etiqueta">Próxima cita</span>' + (p && p.abierta ? '<span class="pastilla p-oro">Inscripción abierta</span>' : '') + '</div>' +
+    '<h2 style="font-size:23px">' + esc(titulo) + '</h2>' +
+    '<div style="font-size:15px;color:var(--texto)">' + esc(fechaLarga(d.fecha)) + (d.hora ? ' · ' + esc(d.hora) : '') + ' · ' + esc(d.campo) + '</div>' +
+    '<div class="subtitulo">' + esc(estadoTxt) + ' · ' + n + (n === 1 ? ' inscrito' : ' inscritos') + '</div>' + boton + '</section>';
+}
+
+/* ---------- vistas públicas ---------- */
+function vistaTemporada() {
+  const d = proximaCita();
+  const lateral = D.competiciones.filter(c => c.tipo === 'liga' && D.resultados.some(r => diasDe(c).some(x => x.id === r.dia_id)));
+  return bloqueTemporada('') +
+    '<div class="columnas"><div class="col-principal">' + selectorQuienSoy() +
+    (d ? tarjetaCita(d) : '<section class="tarjeta tarjeta-pad"><span class="etiqueta">Próxima cita</span><p style="margin:6px 0 0">' + (D.temporada.estado === 'cerrada' ? 'La temporada ha terminado.' : 'Las fechas de la temporada ' + TEMPORADA + ' aún no están aprobadas. Aparecerán aquí en cuanto se publiquen.') + '</p></section>') +
+    '<h2 class="titulo-seccion">Competiciones</h2><div class="tarjeta lista">' + D.competiciones.map(filaCompeticion).join('') + '</div></div>' +
+    (lateral.length ? '<aside class="col-lateral">' + lateral.map(c => resumenClasif(c)).join('') + '</aside>' : '') + '</div>';
+}
+function resumenClasif(c) {
+  const f = clasificacion(c, 'stableford');
+  return '<div class="tarjeta lista"><div class="fila"><span class="crece"><span class="nombre">' + esc(c.nombre) + '</span><span class="sub">Clasificación hándicap</span></span></div>' +
+    f.slice(0, 5).map((x, i) => filaClasif(x, i)).join('') + '<a class="fila" href="#/c/' + c.id + '"><b>Clasificación completa y scratch ›</b></a></div>';
+}
+function filaClasif(x, i) {
+  const esYo = String(x.id) === yo;
+  return '<div class="fila' + (esYo ? ' yo' : '') + '"><span class="puesto' + (i === 0 ? ' oro' : i > 2 ? ' simple' : '') + '">' + (i + 1) + '</span>' +
+    '<span class="crece"><span class="nombre">' + (esYo ? 'Tú · ' : '') + esc(nombreCorto(x.nombre)) + '</span><span class="sub">hcp ' + hcpTxt(x.hcp) + ' · ' + x.jugadas + (x.jugadas === 1 ? ' tarjeta' : ' tarjetas') + '</span></span>' +
+    '<span class="puntos' + (i === 0 ? ' lider' : '') + '">' + x.total + '</span></div>';
+}
+function vistaCompeticion(c, sub) {
+  if (!c) return '<div class="tarjeta vacio">Esa competición no existe. <a href="#/">Volver</a></div>';
+  const e = estado(c), ds = diasDe(c);
+  const conClasif = c.tipo === 'liga' || c.tipo === 'suma';
+  const pest = (conClasif ? [['', 'Clasificación']] : c.tipo === 'ryder' ? [['', 'Equipos']] : []).concat([['dias', c.tipo === 'liga' ? 'Jornadas' : 'Días'], ['inscritos', 'Inscritos'], ['fotos', 'Fotos']]);
+  if (!sub && !conClasif && c.tipo !== 'ryder') sub = 'dias';
+  let cuerpo;
+  if (sub === 'dias') cuerpo = listaDias(c);
+  else if (sub === 'inscritos') cuerpo = listaInscritos(c);
+  else if (sub === 'fotos') cuerpo = fotosDe(c.id) || '<div class="tarjeta vacio">Aún no hay fotos de esta competición.</div>';
+  else if (c.tipo === 'ryder') cuerpo = vistaRyder(c);
+  else cuerpo = vistaClasificacion(c);
+  const pal = c.palmares_publicado ? palmares(c) : '';
+  return '<a class="enlace" href="#/">‹ Temporada ' + TEMPORADA + '</a>' +
+    '<section style="display:flex;flex-direction:column;gap:6px"><span class="pastilla ' + e.cls + '">' + e.txt + '</span><h1 style="font-size:clamp(26px,4vw,36px)">' + esc(c.nombre) + '</h1>' +
+    '<div class="subtitulo" style="font-size:14px">' + esc(cuandoComp(c)) + (c.tipo === 'liga' ? ' · puntúan las ' + (c.mejores_tarjetas || 4) + ' mejores tarjetas' : c.tipo === 'suma' ? ' · suma de todas las tarjetas' : '') + '</div></section>' +
+    pal + '<nav class="segmentos" aria-label="Apartados">' + pest.map(([h, t]) => '<a href="#/c/' + c.id + (h ? '/' + h : '') + '" class="' + ((sub || '') === h ? 'activa' : '') + '">' + t + '</a>').join('') + '</nav>' + cuerpo;
+}
+function vistaClasificacion(c) {
+  const f = clasificacion(c, V.tipo);
+  const alt = '<div class="alternar"><button data-accion="tipo" data-tipo="stableford" class="' + (V.tipo === 'stableford' ? 'activa' : '') + '">Stableford hándicap</button><button data-accion="tipo" data-tipo="scratch" class="' + (V.tipo === 'scratch' ? 'activa' : '') + '">Scratch</button></div>';
+  if (!f.length) return alt + '<div class="tarjeta vacio">Aún no hay resultados publicados.</div>';
+  return alt + '<div class="tarjeta lista">' + f.map(filaClasif).join('') + '</div>' +
+    '<p class="subtitulo">Desempate: ' + (V.tipo === 'stableford' ? 'menor hándicap' : 'mayor hándicap') + '.</p>';
+}
+function palmares(c) {
+  const ps = D.premios.filter(p => p.competicion_id === c.id).sort((a, b) => a.orden - b.orden);
+  if (!ps.length) return '';
+  return '<section class="tarjeta lista"><div class="fila"><h2>Palmarés</h2></div>' + ps.map(p => { const j = jugador(p.jugador_id); return '<div class="fila"><span class="crece"><span class="nombre">' + esc(j ? j.nombre : '—') + '</span><span class="sub">' + esc(p.nombre) + (p.puesto ? ' · ' + p.puesto + '.º clasificado' : '') + '</span></span></div>'; }).join('') + '</section>';
+}
+function listaDias(c) {
+  const ds = diasDe(c);
+  if (!ds.length) return '<div class="tarjeta vacio">Las fechas aún no están definidas.</div>';
+  return '<div class="tarjeta lista">' + ds.map(d => {
+    const p = plazo(d), res = D.resultados.some(r => r.dia_id === d.id);
+    const txt = !d.fecha ? 'Fecha por definir' : fechaLarga(d.fecha) + (d.campo ? ' · ' + d.campo : ' · campo por definir');
+    const est = res ? '<span class="pastilla p-gris">Resultados</span>' : p && p.abierta ? '<a class="boton boton-pequeno" href="#/apuntarse/' + d.id + '">Apuntarme</a>' : '';
+    return '<div class="fila"><span class="puesto">' + (c.tipo === 'liga' ? 'J' + d.orden : d.orden) + '</span><span class="crece"><span class="nombre">' + esc(txt) + '</span><span class="sub">' + inscritos(d).length + ' inscritos' + (p && p.antes ? ' · se abre el ' + esc(momento(p.abre)) : p && p.abierta ? ' · hasta el ' + esc(momento(p.cierra)) : '') + '</span></span>' + est + '</div>' + (res ? resultadosDia(d) : '');
+  }).join('') + '</div>';
+}
+function resultadosDia(d) {
+  const rs = D.resultados.filter(r => r.dia_id === d.id).sort((a, b) => b.stableford - a.stableford);
+  return '<details style="padding:0 16px 10px"><summary class="enlace">Ver resultados del día</summary><div class="tabla-caja"><table><thead><tr><th>Jugador</th><th class="num">Stableford</th><th class="num">Scratch</th></tr></thead><tbody>' +
+    rs.map(r => '<tr><td>' + esc(nombreCorto((jugador(r.jugador_id) || {}).nombre || '')) + '</td><td class="num">' + (r.stableford ?? '—') + '</td><td class="num">' + (r.scratch ?? '—') + '</td></tr>').join('') + '</tbody></table></div></details>';
+}
+function listaInscritos(c) {
+  const ds = diasDe(c).filter(d => d.fecha);
+  if (!ds.length) return '<div class="tarjeta vacio">Aún no hay días con fecha.</div>';
+  return ds.map(d => { const l = inscritos(d); return '<div class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc((nombreDia(d) ? nombreDia(d) + ' · ' : '') + fechaLarga(d.fecha)) + '</b><span class="subtitulo">' + l.length + '</span></div>' + (l.length ? '<div class="pildoras">' + l.map(j => '<span class="pildora' + (j.sexo === 'M' ? ' m' : '') + '">' + esc(nombreCorto(j.nombre)) + '</span>').join('') + '</div>' : '<span class="subtitulo">Nadie apuntado todavía.</span>') + '</div>'; }).join('');
+}
+function vistaRyder(c) {
+  const eqs = D.equipos.filter(e => e.competicion_id === c.id);
+  if (!eqs.length) return '<div class="tarjeta vacio">Los equipos se publicarán aquí.' + (c.ryder_modalidad ? ' Modalidad: ' + esc(c.ryder_modalidad) + '.' : '') + '</div>';
+  const res = resultadoRyder(c);
+  const marcador = res.length === 2 ? '<div class="tarjeta tarjeta-pad" style="text-align:center"><span class="etiqueta">Resultado</span><h2 style="font-size:26px;margin-top:4px">' + esc(res[0].bando) + ' ' + String(res[0].puntos).replace('.', ',') + ' · ' + esc(res[1].bando) + ' ' + String(res[1].puntos).replace('.', ',') + '</h2>' + (c.ryder_regla === 'media' ? '<div class="subtitulo">Con varios equipos, cuenta la media de cada bando.</div>' : '') + '</div>' : '';
+  return marcador + [...new Set(eqs.map(e => e.bando))].map(b => '<div class="tarjeta lista"><div class="fila"><h2>' + esc(b) + '</h2></div>' + eqs.filter(e => e.bando === b).map(e => '<div class="fila"><span class="crece"><span class="nombre">' + esc(e.nombre) + '</span><span class="sub">' + D.equiposJug.filter(x => x.equipo_id === e.id).map(x => esc(nombreCorto((jugador(x.jugador_id) || {}).nombre || ''))).join(' · ') + '</span></span>' + (e.puntos != null ? '<span class="puntos">' + String(e.puntos).replace('.', ',') + '</span>' : '') + '</div>').join('') + '</div>').join('');
+}
+function vistaApuntarse(d) {
+  if (!d) return '<div class="tarjeta vacio">Ese día no existe. <a href="#/">Volver</a></div>';
+  const c = competicion(d.competicion_id), p = plazo(d), j = jugador(yo), l = inscritos(d);
+  const ya = j && apuntado(d, j.id);
+  let caja;
+  if (!j) caja = '<p style="margin:0">Primero dinos quién eres:</p>' + selectorQuienSoy();
+  else {
+    const hj = hcpJuego(j, d);
+    caja = '<div style="display:flex;align-items:center;gap:12px"><span class="puesto oro" style="width:44px;height:44px;font-size:15px">' + esc(iniciales(j.nombre)) + '</span><span class="crece" style="flex:1"><span class="subtitulo" style="font-weight:700;display:block">' + (ya ? 'Estás apuntado como' : 'Te apuntas como') + '</span><b style="font-size:16px">' + esc(j.nombre) + '</b></span><button class="enlace" style="border:none;background:none" data-accion="no-soy-yo">No soy yo</button></div>' +
+      '<div class="cifras"><div class="cifra"><span>Hándicap</span><b>' + hcpTxt(j.hcp) + '</b></div><div class="cifra"><span>De juego</span><b>' + (hj == null ? '—' : hj) + '</b></div><div class="cifra"><span>Barras</span><b>' + (j.sexo === 'M' ? 'Rojas' : 'Amarillas') + '</b></div></div>';
+    if (p && p.abierta) caja += ya
+      ? '<button class="boton boton-peligro" data-accion="baja" data-dia="' + d.id + '">Darme de baja</button>'
+      : '<label class="campo">Comentario (opcional)<input id="comentario" maxlength="200" placeholder="Voy con acompañante, salgo tarde…"/></label><button class="boton" data-accion="apuntar" data-dia="' + d.id + '">Confirmar inscripción</button>';
+  }
+  const plazoTxt = !p ? 'La inscripción se abrirá cuando el día tenga fecha y campo.' : p.abierta ? 'Inscripción abierta hasta el ' + momento(p.cierra) + '. Hasta entonces puedes darte de baja tú mismo.' : p.antes ? 'La inscripción se abre el ' + momento(p.abre) + '.' : 'La inscripción está cerrada. Para cualquier cambio, avisa a un administrador.';
+  return '<a class="enlace" href="#/c/' + c.id + '/dias">‹ ' + esc(c.nombre) + '</a>' +
+    '<section style="display:flex;flex-direction:column;gap:4px"><span class="etiqueta">' + esc(c.nombre) + '</span><h1 style="font-size:clamp(24px,4vw,34px)">' + esc((nombreDia(d) ? nombreDia(d) + ' · ' : '') + (d.campo || 'Campo por definir')) + '</h1><div style="font-size:15px">' + esc(fechaLarga(d.fecha)) + (d.hora ? ' · ' + esc(d.hora) : '') + '</div></section>' +
+    '<div class="columnas"><div class="col-principal"><section class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:14px">' + caja + '<div class="nota">' + esc(plazoTxt) + '</div></section></div>' +
+    '<aside class="col-lateral"><div class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><h2>Ya apuntados</h2><span class="subtitulo">' + l.length + '</span></div>' + (l.length ? '<div class="pildoras">' + l.map(x => '<span class="pildora' + (x.sexo === 'M' ? ' m' : '') + '">' + esc(nombreCorto(x.nombre)) + '</span>').join('') + '</div>' : '<span class="subtitulo">Todavía nadie.</span>') + '</div></aside></div>';
+}
+function vistaHandicaps() {
+  const js = enAlta().sort((a, b) => a.hcp - b.hcp);
+  return bloqueTemporada('handicaps') + '<div class="tarjeta"><div class="tabla-caja"><table><thead><tr><th>Jugador</th><th class="num">Hándicap</th><th class="num">Barras</th><th class="num">Cuota</th></tr></thead><tbody>' +
+    js.map(j => '<tr' + (String(j.id) === yo ? ' style="background:var(--oro-suave)"' : '') + '><td>' + esc(j.nombre) + '</td><td class="num"><b>' + hcpTxt(Math.min(j.hcp, 54)) + '</b></td><td class="num">' + (j.sexo === 'M' ? 'Rojas' : 'Amarillas') + '</td><td class="num">' + (cuotaPagada(j.id) ? '✓' : '—') + '</td></tr>').join('') +
+    '</tbody></table></div></div><p class="subtitulo">Para jugar, el hándicap se limita a 36.</p>';
+}
+function vistaCalendario() {
+  const con = D.dias.filter(d => d.fecha).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const sin = D.competiciones.filter(c => !diasDe(c).length || diasDe(c).some(d => !d.fecha));
+  return bloqueTemporada('calendario') +
+    (con.length ? '<div class="tarjeta lista">' + con.map(d => { const c = competicion(d.competicion_id); return '<a class="fila" href="#/c/' + c.id + '/dias"><span class="puesto" style="width:52px;border-radius:12px">' + fechaCorta(d.fecha) + '</span><span class="crece"><span class="nombre">' + esc(c.nombre + (nombreDia(d) ? ' · ' + nombreDia(d) : '')) + '</span><span class="sub">' + esc(fechaLarga(d.fecha) + ' · ' + (d.campo || 'campo por definir')) + '</span></span></a>'; }).join('') + '</div>' : '') +
+    (sin.length ? '<h2 class="titulo-seccion">Fechas por definir</h2><div class="tarjeta lista">' + sin.map(filaCompeticion).join('') + '</div>' : '');
+}
+function fotosDe(cid) {
+  const evs = D.eventosFotos.filter(e => e.competicion_id === Number(cid));
+  const html = evs.map(e => { const fs = D.fotos.filter(f => f.evento_id === e.id && f.visible !== false); if (!fs.length) return ''; return '<div class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:10px"><h2>' + esc(e.nombre) + '</h2><div class="galeria">' + fs.map((f, i) => '<button data-accion="visor" data-evento="' + esc(e.id) + '" data-i="' + i + '" aria-label="Ampliar foto"><img loading="lazy" src="' + esc(urlFoto(f, true)) + '" alt="' + esc(f.pie || e.nombre) + '"/></button>').join('') + '</div></div>'; }).join('');
+  return html;
+}
+function vistaFotos() {
+  const html = D.competiciones.map(c => fotosDe(c.id)).join('');
+  return bloqueTemporada('fotos') + (html || '<div class="tarjeta vacio">Aún no hay fotos de esta temporada.</div>') + '<a class="enlace" href="https://clubdegolfdetecnatom.github.io/galeria.html">Galería histórica del club ›</a>';
+}
+
+/* ---------- administración ---------- */
+function vistaEntrar(modo) {
+  if (D.email && !D.admin) return '<section class="tarjeta tarjeta-pad" style="max-width:440px;margin:24px auto;display:flex;flex-direction:column;gap:12px"><h1 style="font-size:24px">Sin permiso</h1><p style="margin:0">Has entrado como ' + esc(D.email) + ', que no está en la lista de administradores.</p><button class="boton boton-sec" data-accion="salir">Salir</button></section>';
+  if (modo === 'nueva-clave') return '<form data-form="nueva-clave" class="tarjeta tarjeta-pad" style="max-width:440px;margin:24px auto;display:flex;flex-direction:column;gap:12px"><h1 style="font-size:24px">Nueva contraseña</h1><label class="campo">Contraseña nueva (8 caracteres o más)<input type="password" name="clave" minlength="8" required autocomplete="new-password"/></label><button class="boton">Guardar</button></form>';
+  return '<section style="max-width:440px;width:100%;margin:12px auto;display:flex;flex-direction:column;gap:14px;text-align:center"><img src="cdgdt.jpg" alt="" width="72" height="72" style="margin:0 auto"/><h1 style="font-size:28px">Administración</h1><p style="margin:0;color:var(--gris)">Solo para gestionar la temporada. Para apuntarte como jugador no hace falta entrar.</p></section>' +
+    '<form data-form="entrar" class="tarjeta tarjeta-pad" style="max-width:440px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px">' +
+    '<label class="campo">Correo<input type="email" name="email" required autocomplete="username"/></label>' +
+    '<label class="campo">Contraseña<input type="password" name="clave" required autocomplete="current-password"/></label>' +
+    '<button class="boton">Entrar</button><button type="button" class="enlace" style="border:none;background:none;align-self:center" data-accion="olvido">He olvidado mi contraseña</button></form>';
+}
+function cabeceraAdmin(activa) {
+  const pest = [['jugadores', 'Jugadores'], ['competiciones', 'Competiciones'], ['resultados', 'Resultados'], ['fotos', 'Fotos']];
+  return '<section class="cabecera-admin"><div style="flex:1 1 220px"><h1>Administración ' + TEMPORADA + '</h1><div class="quien">' + esc(D.email) + '</div></div>' +
+    '<button class="boton boton-pequeno" style="background:rgba(255,255,255,0.14)" data-accion="salir">Salir</button>' +
+    '<nav class="pestanas" style="flex-basis:100%;margin-top:0" aria-label="Secciones de administración">' + pest.map(([h, t]) => '<a href="#/admin/' + h + '" class="' + (activa === h ? 'activa' : '') + '">' + t + '</a>').join('') + '</nav></section>';
+}
+function vistaAdmin(r) {
+  const s = r[0] || 'competiciones';
+  if (s === 'jugadores') return cabeceraAdmin('jugadores') + adminJugadores();
+  if (s === 'c') return cabeceraAdmin('competiciones') + adminCompeticion(competicion(r[1]), r[2]);
+  if (s === 'dia') return cabeceraAdmin('competiciones') + adminDia(dia(r[1]));
+  if (s === 'resultados') return cabeceraAdmin('resultados') + adminResultados(r[1]);
+  if (s === 'fotos') return cabeceraAdmin('fotos') + adminFotos(r[1]);
+  return cabeceraAdmin('competiciones') + '<div class="tarjeta lista">' + D.competiciones.map(c => '<a class="fila" href="#/admin/c/' + c.id + '"><span class="crece"><span class="nombre">' + esc(c.nombre) + '</span><span class="sub">' + esc(cuandoComp(c)) + '</span></span><span class="pastilla ' + estado(c).cls + '">' + estado(c).txt + '</span></a>').join('') + '</div>';
+}
+function adminJugadores() {
+  const filas = D.tj.map(t => Object.assign({}, jugador(t.jugador_id), t)).filter(j => j.nombre).sort((a, b) => (b.activo - a.activo) || a.nombre.localeCompare(b.nombre, 'es'));
+  return '<form data-form="nuevo-jugador" class="tarjeta tarjeta-pad tarjeta-destacada" style="display:flex;flex-direction:column;gap:10px"><h2>Nuevo jugador</h2>' +
+    '<label class="campo">Nombre y apellidos<input name="nombre" required minlength="3" maxlength="80"/></label>' +
+    '<div class="rejilla"><label class="campo">Sexo<select name="sexo"><option value="H">Hombre</option><option value="M">Mujer</option></select></label><label class="campo">Hándicap<input name="hcp" required inputmode="decimal" placeholder="24,5"/></label><label class="campo">Licencia<input name="licencia" maxlength="20"/></label></div>' +
+    '<button class="boton">Dar de alta</button></form>' +
+    '<h2 class="titulo-seccion">Jugadores · ' + filas.filter(f => f.activo).length + ' en alta</h2><div class="tarjeta"><div class="tabla-caja"><table><thead><tr><th>Jugador</th><th>Licencia</th><th class="num">Hándicap</th><th class="num">Cuota</th><th></th></tr></thead><tbody>' +
+    filas.map(j => '<tr' + (j.activo ? '' : ' style="opacity:.6"') + '><td><b>' + esc(j.nombre) + '</b>' + (j.activo ? '' : '<div class="subtitulo">De baja desde ' + esc(j.baja_desde || '') + '</div>') + '</td><td>' + esc(D.licencias[j.jugador_id] || '—') + '</td>' +
+      '<td class="num"><input class="celda" aria-label="Hándicap de ' + esc(j.nombre) + '" value="' + hcpTxt(j.hcp) + '" data-cambio="hcp" data-jugador="' + j.jugador_id + '"/></td>' +
+      '<td class="num"><input type="checkbox" style="width:22px;height:22px;accent-color:#173A2C" aria-label="Cuota pagada de ' + esc(j.nombre) + '" ' + (j.cuota_pagada ? 'checked' : '') + ' data-cambio="cuota" data-jugador="' + j.jugador_id + '"/></td>' +
+      '<td>' + (j.activo ? '<button class="boton boton-peligro boton-pequeno" data-accion="baja-jugador" data-jugador="' + j.jugador_id + '">Dar de baja</button>' : '<button class="boton boton-sec boton-pequeno" data-accion="alta-jugador" data-jugador="' + j.jugador_id + '">Reactivar</button>') + '</td></tr>').join('') +
+    '</tbody></table></div></div><p class="subtitulo">Dar de baja no borra a nadie: sus resultados se conservan.</p>';
+}
+function adminCompeticion(c, sub) {
+  if (!c) return '<div class="tarjeta vacio">No existe.</div>';
+  const ds = diasDe(c);
+  const ajustes = '<form data-form="competicion" data-id="' + c.id + '" class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:12px"><h2>Ajustes</h2>' +
+    '<label class="campo">Nombre<input name="nombre" value="' + esc(c.nombre) + '" required/></label>' +
+    '<div class="rejilla">' +
+    '<label class="campo">Inscripción se abre (días antes)<input name="insc_abre_dias" inputmode="numeric" value="' + c.insc_abre_dias + '"/></label>' +
+    '<label class="campo">Se cierra (días antes)<input name="insc_cierra_dias" inputmode="numeric" value="' + c.insc_cierra_dias + '"/></label>' +
+    '<label class="campo">Hora de cierre<input name="insc_cierra_hora" type="time" value="' + String(c.insc_cierra_hora || '14:00').slice(0, 5) + '"/></label>' +
+    (c.tipo === 'liga' ? '<label class="campo">Tarjetas que puntúan<input name="mejores_tarjetas" inputmode="numeric" value="' + (c.mejores_tarjetas || 4) + '"/></label>' : '') +
+    (c.tipo === 'liga' || c.tipo === 'suma' ? '<label class="campo">Premios scratch<input name="premios_scratch" inputmode="numeric" value="' + c.premios_scratch + '"/></label><label class="campo">Premios hándicap<input name="premios_hcp" inputmode="numeric" value="' + c.premios_hcp + '"/></label>' : '') +
+    (c.tipo === 'ryder' ? '<label class="campo">Modalidad<input name="ryder_modalidad" value="' + esc(c.ryder_modalidad || '') + '" placeholder="Scramble, fourball…"/></label><label class="campo">Gana el bando con<select name="ryder_regla"><option value="">Por decidir</option><option value="media"' + (c.ryder_regla === 'media' ? ' selected' : '') + '>La media de sus equipos</option><option value="suma"' + (c.ryder_regla === 'suma' ? ' selected' : '') + '>La suma de sus equipos</option></select></label>' : '') +
+    '</div><button class="boton">Guardar ajustes</button></form>';
+  const dias = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="titulo-seccion">' + (c.tipo === 'liga' ? 'Jornadas' : 'Días') + '</h2><button class="boton boton-pequeno" data-accion="nuevo-dia" data-comp="' + c.id + '">Añadir ' + (c.tipo === 'liga' ? 'jornada' : 'día') + '</button></div>' +
+    (ds.length ? '<div class="tarjeta lista">' + ds.map(d => { const p = plazo(d); return '<a class="fila" href="#/admin/dia/' + d.id + '"><span class="puesto">' + (c.tipo === 'liga' ? 'J' + d.orden : d.orden) + '</span><span class="crece"><span class="nombre">' + esc((d.fecha ? fechaLarga(d.fecha) : 'Fecha por definir') + ' · ' + (d.campo || 'campo por definir')) + '</span><span class="sub">' + (p ? (p.abierta ? 'Inscripción abierta hasta el ' + momento(p.cierra) : p.antes ? 'Se abre el ' + momento(p.abre) : 'Inscripción cerrada') : 'Sin fecha o sin campo: la inscripción no se abre') + ' · ' + inscritos(d).length + ' inscritos</span></span>›</a>'; }).join('') + '</div>' : '<div class="tarjeta vacio">Sin días todavía.</div>');
+  let extra = '';
+  if (c.tipo === 'ryder') extra = adminRyder(c);
+  if (c.tipo === 'liga' || c.tipo === 'suma') extra = adminPremios(c);
+  return '<a class="enlace" href="#/admin/competiciones">‹ Competiciones</a><h1 style="font-size:28px">' + esc(c.nombre) + '</h1><div class="columnas"><div class="col-principal">' + dias + extra + '</div><aside class="col-lateral">' + ajustes + '</aside></div>';
+}
+function adminDia(d) {
+  if (!d) return '<div class="tarjeta vacio">No existe.</div>';
+  const c = competicion(d.competicion_id), l = inscritos(d), p = plazo(d);
+  const val = (k) => d[k] == null ? '' : esc(String(d[k]));
+  const form = '<form data-form="dia" data-id="' + d.id + '" class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:12px"><h2>Fecha y campo</h2><div class="rejilla">' +
+    '<label class="campo">Fecha<input type="date" name="fecha" value="' + val('fecha') + '"/></label><label class="campo">Hora<input name="hora" value="' + val('hora') + '" placeholder="Salidas 9:00"/></label>' +
+    '<label class="campo" style="grid-column:1/-1">Campo<input name="campo" value="' + val('campo') + '"/></label>' +
+    '<label class="campo">Par<input name="par" inputmode="numeric" value="' + val('par') + '"/></label>' +
+    '<label class="campo">CR amarillas<input name="cr_h" inputmode="decimal" value="' + val('cr_h') + '"/></label><label class="campo">Slope amarillas<input name="slope_h" inputmode="numeric" value="' + val('slope_h') + '"/></label>' +
+    '<label class="campo">CR rojas<input name="cr_m" inputmode="decimal" value="' + val('cr_m') + '"/></label><label class="campo">Slope rojas<input name="slope_m" inputmode="numeric" value="' + val('slope_m') + '"/></label></div>' +
+    '<p class="subtitulo" style="margin:0">' + (p ? 'Plazo: se abre el ' + esc(momento(p.abre)) + ' y se cierra el ' + esc(momento(p.cierra)) + '.' : 'Con fecha y campo se abre la inscripción según el plazo de la competición.') + '</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="boton">Guardar</button><button type="button" class="boton boton-peligro" data-accion="borrar-dia" data-dia="' + d.id + '">Quitar este día</button></div></form>';
+  const lista = '<div class="tarjeta"><div class="fila" style="justify-content:space-between"><h2>Inscritos · ' + l.length + '</h2><button class="boton boton-sec boton-pequeno" data-accion="exportar" data-dia="' + d.id + '">Descargar lista</button></div><div class="tabla-caja"><table><thead><tr><th>#</th><th>Jugador</th><th>Licencia</th><th class="num">Hcp</th><th class="num">Juego</th><th>Barras</th><th></th></tr></thead><tbody>' +
+    l.map((j, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + esc(j.nombre) + '</b>' + (j.comentario ? '<div class="subtitulo">' + esc(j.comentario) + '</div>' : '') + '</td><td>' + esc(D.licencias[j.id] || '—') + '</td><td class="num">' + hcpTxt(Math.min(j.hcp, 36)) + '</td><td class="num">' + (hcpJuego(j, d) ?? '—') + '</td><td>' + (j.sexo === 'M' ? 'Rojas' : 'Amarillas') + '</td><td><button class="boton boton-peligro boton-pequeno" data-accion="quitar-inscrito" data-dia="' + d.id + '" data-jugador="' + j.id + '">Quitar</button></td></tr>').join('') +
+    '</tbody></table></div><form data-form="apuntar-admin" data-dia="' + d.id + '" class="tarjeta-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="campo" style="flex:1 1 220px">Apuntar a alguien (también fuera de plazo)<select name="jugador">' + enAlta().filter(j => !apuntado(d, j.id)).map(j => '<option value="' + j.id + '">' + esc(j.nombre) + '</option>').join('') + '</select></label><button class="boton">Apuntar</button></form></div>';
+  return '<a class="enlace" href="#/admin/c/' + c.id + '">‹ ' + esc(c.nombre) + '</a><h1 style="font-size:26px">' + esc((nombreDia(d) || 'Día') + ' · ' + (d.campo || 'campo por definir')) + '</h1><div class="columnas"><div class="col-principal">' + lista + '</div><aside class="col-lateral">' + form + '</aside></div>';
+}
+function adminRyder(c) {
+  const eqs = D.equipos.filter(e => e.competicion_id === c.id);
+  const res = resultadoRyder(c);
+  const dias = diasDe(c), inscritosIds = new Set(dias.flatMap(d => inscritos(d).map(j => j.id)));
+  const libres = enAlta().filter(j => !D.equiposJug.some(x => x.jugador_id === j.id && eqs.some(e => e.id === x.equipo_id)));
+  return '<h2 class="titulo-seccion">Equipos</h2>' + (eqs.length ? eqs.map(e => '<form data-form="equipo" data-id="' + e.id + '" class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>' + esc(e.bando) + ' · ' + esc(e.nombre) + '</b><button type="button" class="boton boton-peligro boton-pequeno" data-accion="borrar-equipo" data-equipo="' + e.id + '">Quitar</button></div>' +
+    '<div class="pildoras">' + D.equiposJug.filter(x => x.equipo_id === e.id).map(x => '<button type="button" class="pildora" style="border:none" data-accion="sacar-de-equipo" data-equipo="' + e.id + '" data-jugador="' + x.jugador_id + '" aria-label="Sacar del equipo">' + esc(nombreCorto((jugador(x.jugador_id) || {}).nombre || '')) + ' ✕</button>').join('') + '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="campo" style="flex:1 1 200px">Añadir jugador<select name="jugador"><option value="">—</option>' + libres.map(j => '<option value="' + j.id + '">' + esc(j.nombre) + (inscritosIds.has(j.id) ? ' · apuntado' : '') + '</option>').join('') + '</select></label><label class="campo" style="width:110px">Puntos<input name="puntos" inputmode="decimal" value="' + (e.puntos ?? '') + '"/></label><button class="boton">Guardar</button></div></form>').join('') : '<div class="tarjeta vacio">Sin equipos todavía.</div>') +
+    '<form data-form="nuevo-equipo" data-comp="' + c.id + '" class="tarjeta tarjeta-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="campo" style="flex:1 1 160px">Bando<input name="bando" list="bandos" required placeholder="Jubilados"/></label><datalist id="bandos"><option value="Jubilados"></option><option value="No Jubilados"></option></datalist><label class="campo" style="flex:1 1 200px">Nombre del equipo<input name="nombre" required placeholder="Equipo de…"/></label><button class="boton">Añadir equipo</button></form>' +
+    (res.length ? '<div class="nota">Resultado: ' + res.map(r => esc(r.bando) + ' ' + String(r.puntos).replace('.', ',')).join(' · ') + (c.ryder_regla ? '' : ' (elige en Ajustes si cuenta la media o la suma)') + '</div>' : '') +
+    '<button class="boton" data-accion="publicar-ryder" data-comp="' + c.id + '"' + (eqs.length ? '' : ' disabled') + '>' + (eqs.some(e => e.publicado) ? 'Volver a publicar equipos y resultado' : 'Publicar equipos y resultado') + '</button>';
+}
+function adminPremios(c) {
+  const calc = premiosCalculados(c);
+  const esp = D.premios.filter(p => p.competicion_id === c.id && p.categoria === 'especial');
+  return '<h2 class="titulo-seccion">Premios</h2><div class="tarjeta lista">' +
+    (calc.length ? calc.map(p => '<div class="fila"><span class="crece"><span class="nombre">' + esc((jugador(p.jugador_id) || {}).nombre || '') + '</span><span class="sub">' + esc(p.nombre) + ' · ' + p.puesto + '.º clasificado · ' + p.total + ' puntos</span></span></div>').join('') : '<div class="vacio">Se calculan solos con los resultados publicados.</div>') + '</div>' +
+    '<p class="subtitulo">No acumulables: primero se dan los de scratch y en hándicap se salta a quien ya tiene premio. Bola más larga y más cercana sí se acumulan.</p>' +
+    '<div class="tarjeta lista">' + esp.map(p => '<div class="fila"><span class="crece"><span class="nombre">' + esc(p.nombre) + '</span><span class="sub">' + esc((jugador(p.jugador_id) || {}).nombre || '') + '</span></span><button class="boton boton-peligro boton-pequeno" data-accion="borrar-premio" data-premio="' + p.id + '">Quitar</button></div>').join('') +
+    '<form data-form="premio-especial" data-comp="' + c.id + '" class="tarjeta-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="campo" style="flex:1 1 180px">Premio especial<input name="nombre" list="especiales" required/></label><datalist id="especiales"><option value="Bola más larga damas"></option><option value="Bola más larga caballeros"></option><option value="Bola más cercana a bandera"></option></datalist><label class="campo" style="flex:1 1 180px">Ganador<select name="jugador">' + enAlta().map(j => '<option value="' + j.id + '">' + esc(j.nombre) + '</option>').join('') + '</select></label><button class="boton">Añadir</button></form></div>' +
+    '<button class="boton" data-accion="publicar-palmares" data-comp="' + c.id + '">' + (c.palmares_publicado ? 'Volver a publicar el palmarés' : 'Publicar el palmarés') + '</button>';
+}
+function adminResultados(diaId) {
+  const conFecha = D.dias.filter(d => d.fecha).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (!conFecha.length) return '<div class="tarjeta vacio">Todavía no hay días con fecha.</div>';
+  const hoy = hoyISO();
+  const d = dia(diaId) || conFecha.filter(x => x.fecha <= hoy).pop() || conFecha[0];
+  const c = competicion(d.competicion_id);
+  const fotos = D.fotosRes.filter(f => f.dia_id === d.id);
+  const borr = D.borradores.filter(r => r.dia_id === d.id);
+  const publicado = borr.length && borr.every(r => r.publicado);
+  const ids = new Set(inscritos(d).map(j => j.id).concat(borr.map(r => r.jugador_id)));
+  const filas = [...ids].map(id => ({ j: jugador(id), r: borr.find(x => x.jugador_id === id) || {} })).filter(x => x.j).sort((a, b) => (b.r.stableford ?? -1) - (a.r.stableford ?? -1) || a.j.nombre.localeCompare(b.j.nombre, 'es'));
+  const pasos = '<ol class="pasos"><li><span class="paso' + (fotos.length ? '' : ' pend') + '">1</span><span><b>Fotos de los resultados</b> · ' + (fotos.length ? fotos.length + ' subidas' : 'súbelas al terminar la jornada') + '</span></li>' +
+    '<li><span class="paso' + (borr.length ? '' : ' pend') + '">2</span><span><b>Puntos leídos</b> · ' + (borr.length ? 'borrador listo' + (borr.some(r => r.dudoso) ? ', revisa lo marcado' : '') : fotos.length ? 'leyendo las fotos…' : 'pendiente') + '</span></li>' +
+    '<li><span class="paso' + (publicado ? '' : ' pend') + '">3</span><span><b>Revisar y publicar</b>' + (publicado ? ' · publicado' : '') + '</span></li></ol>';
+  return '<label class="campo">Día<select data-cambio="dia-resultados">' + conFecha.map(x => { const cc = competicion(x.competicion_id); return '<option value="' + x.id + '"' + (x.id === d.id ? ' selected' : '') + '>' + esc(cc.nombre + (nombreDia(x) ? ' · ' + nombreDia(x) : '') + ' · ' + fechaCorta(x.fecha) + (x.campo ? ' · ' + x.campo : '')) + '</option>'; }).join('') + '</select></label>' +
+    '<div class="columnas"><aside class="col-lateral"><section class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:12px"><h2>Fotos de los resultados</h2>' + pasos +
+    (fotos.length ? '<div class="galeria">' + fotos.map(f => '<a href="' + esc(SB_FOTOS + '/resultados/' + f.ruta) + '" target="_blank" rel="noopener"><img src="' + esc(SB_FOTOS + '/resultados/' + f.ruta) + '" alt="Foto de resultados" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px"/></a>').join('') + '</div>' : '') +
+    '<input type="file" id="fotos-resultados" accept="image/*" multiple class="oculto" data-cambio="subir-resultados" data-dia="' + d.id + '"/><button class="boton boton-linea" data-accion="elegir-fotos-resultados">Añadir fotos</button></section></aside>' +
+    '<div class="col-principal"><section class="tarjeta"><div class="fila" style="justify-content:space-between;flex-wrap:wrap"><h2>' + esc(c.nombre + (nombreDia(d) ? ' · ' + nombreDia(d) : '')) + '</h2><span class="subtitulo">Corrige cualquier casilla antes de publicar</span></div>' +
+    (filas.length ? '<div class="tabla-caja"><table><thead><tr><th>Jugador</th><th class="num">Stableford</th><th class="num">Scratch</th></tr></thead><tbody>' + filas.map(({ j, r }) => '<tr class="' + (r.dudoso ? 'dudoso' : '') + '" data-fila-res="' + j.id + '"><td><b>' + esc(nombreCorto(j.nombre)) + '</b>' + (r.dudoso ? '<div class="subtitulo" style="color:var(--oro-oscuro);font-weight:700">No se leía bien: compruébalo</div>' : '') + '</td><td class="num"><input class="celda' + (r.dudoso ? ' dudosa' : '') + '" inputmode="numeric" aria-label="Stableford de ' + esc(j.nombre) + '" name="stb" value="' + (r.stableford ?? '') + '"/></td><td class="num"><input class="celda' + (r.dudoso ? ' dudosa' : '') + '" inputmode="numeric" aria-label="Scratch de ' + esc(j.nombre) + '" name="scr" value="' + (r.scratch ?? '') + '"/></td></tr>').join('') + '</tbody></table></div>' : '<div class="vacio">Nadie inscrito en este día.</div>') +
+    '<div class="tarjeta-pad" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="boton boton-sec" data-accion="guardar-resultados" data-dia="' + d.id + '" data-publicar="0">Guardar sin publicar</button><button class="boton" data-accion="guardar-resultados" data-dia="' + d.id + '" data-publicar="1">Revisado: publicar</button></div></section></div></div>';
+}
+function adminFotos(cid) {
+  const c = competicion(cid) || D.competiciones[0];
+  const ev = D.eventosFotos.find(e => e.competicion_id === c.id);
+  const fs = ev ? D.fotos.filter(f => f.evento_id === ev.id) : [];
+  return '<label class="campo">Competición<select data-cambio="comp-fotos">' + D.competiciones.map(x => '<option value="' + x.id + '"' + (x.id === c.id ? ' selected' : '') + '>' + esc(x.nombre) + '</option>').join('') + '</select></label>' +
+    '<section class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;border:2px dashed var(--gris)"><input type="file" id="fotos-evento" accept="image/*" multiple class="oculto" data-cambio="subir-fotos" data-comp="' + c.id + '"/><button class="boton" data-accion="elegir-fotos-evento">Elegir fotos</button><span class="subtitulo">Se reducen solas antes de subir; hasta 12 por tanda.</span></section>' +
+    '<h2 class="titulo-seccion">Publicadas · ' + fs.length + '</h2>' + (fs.length ? '<div class="galeria">' + fs.map(f => '<div class="foto-admin' + (f.visible === false ? ' oculta' : '') + '"><img src="' + esc(urlFoto(f, true)) + '" alt="' + esc(f.pie || '') + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px"/><div style="display:flex;gap:4px;margin-top:4px"><input class="celda" style="width:100%;text-align:left;font-weight:500;font-size:14px" placeholder="Pie de foto" value="' + esc(f.pie || '') + '" data-cambio="pie" data-foto="' + f.id + '" aria-label="Pie de foto"/></div><button class="enlace" style="border:none;background:none;padding:6px 0" data-accion="ocultar-foto" data-foto="' + f.id + '" data-visible="' + (f.visible === false ? '1' : '0') + '">' + (f.visible === false ? 'Volver a mostrar' : 'Ocultar') + '</button></div>').join('') + '</div>' : '<div class="tarjeta vacio">Aún no hay fotos de esta competición.</div>');
+}
+
+/* ---------- acciones ---------- */
+async function hacer(fn, ok) {
+  try { await fn(); if (ok) aviso(ok); await cargar(); pintar(); }
+  catch (e) { console.error(e); aviso(errorLegible(e), true); }
+}
+const num = v => { const s = String(v ?? '').trim().replace(',', '.'); return s === '' ? null : Number(s); };
+const ent = v => { const n = num(v); return n == null || !Number.isFinite(n) ? null : Math.round(n); };
+
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-accion]'); if (!b) return;
+  const a = b.dataset.accion;
+  if (a === 'tipo') { V.tipo = b.dataset.tipo; return pintar(); }
+  if (a === 'no-soy-yo') { yo = ''; guardar('tecnatom_jugador_id', ''); return pintar(); }
+  if (a === 'visor') return visorAbrir(b.dataset.evento, Number(b.dataset.i));
+  if (a === 'visor-cerrar') return visorCerrar();
+  if (a === 'visor-mover') return visorMover(Number(b.dataset.paso));
+  if (a === 'apuntar') return hacer(() => q(sb.from('inscripciones_dias').insert({ dia_id: Number(b.dataset.dia), jugador_id: Number(yo), comentario: (document.getElementById('comentario').value || '').trim() || null })), 'Apuntado ✓');
+  if (a === 'baja') return hacer(() => q(sb.from('inscripciones_dias').delete().eq('dia_id', Number(b.dataset.dia)).eq('jugador_id', Number(yo))), 'Baja confirmada');
+  if (a === 'olvido') {
+    const email = (document.querySelector('[name=email]') || {}).value;
+    if (!email) return aviso('Escribe primero tu correo', true);
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname + '#/admin/nueva-clave' });
+    return aviso(error ? errorLegible(error) : 'Te hemos enviado un correo para poner una contraseña nueva', !!error);
+  }
+  if (a === 'salir') { await sb.auth.signOut(); await comprobarAdmin(); location.hash = '#/'; return pintar(); }
+  if (!D.admin) return;
+  if (a === 'baja-jugador') return hacer(() => q(sb.from('temporada_jugadores').update({ activo: false, baja_desde: hoyISO() }).eq('temporada', TEMPORADA).eq('jugador_id', Number(b.dataset.jugador))), 'Jugador dado de baja');
+  if (a === 'alta-jugador') return hacer(() => q(sb.from('temporada_jugadores').update({ activo: true, baja_desde: null }).eq('temporada', TEMPORADA).eq('jugador_id', Number(b.dataset.jugador))), 'Jugador reactivado');
+  if (a === 'nuevo-dia') { const c = competicion(b.dataset.comp); const orden = Math.max(0, ...diasDe(c).map(d => d.orden)) + 1; return hacer(() => q(sb.from('dias').insert({ competicion_id: c.id, orden })), 'Día añadido'); }
+  if (a === 'borrar-dia') { if (!confirmar('¿Quitar este día? Se borran también sus inscripciones y resultados.')) return; const c = dia(b.dataset.dia).competicion_id; await hacer(() => q(sb.from('dias').delete().eq('id', Number(b.dataset.dia))), 'Día quitado'); location.hash = '#/admin/c/' + c; return; }
+  if (a === 'quitar-inscrito') return hacer(() => q(sb.from('inscripciones_dias').delete().eq('dia_id', Number(b.dataset.dia)).eq('jugador_id', Number(b.dataset.jugador))), 'Quitado de la lista');
+  if (a === 'exportar') return exportar(dia(b.dataset.dia));
+  if (a === 'borrar-equipo') { if (!confirmar('¿Quitar este equipo?')) return; } if (a === 'borrar-equipo') return hacer(() => q(sb.from('equipos').delete().eq('id', Number(b.dataset.equipo))), 'Equipo quitado');
+  if (a === 'sacar-de-equipo') return hacer(() => q(sb.from('equipos_jugadores').delete().eq('equipo_id', Number(b.dataset.equipo)).eq('jugador_id', Number(b.dataset.jugador))));
+  if (a === 'publicar-ryder') return hacer(() => q(sb.from('equipos').update({ publicado: true }).eq('competicion_id', Number(b.dataset.comp))), 'Ryder publicada');
+  if (a === 'borrar-premio') return hacer(() => q(sb.from('premios').delete().eq('id', Number(b.dataset.premio))), 'Premio quitado');
+  if (a === 'publicar-palmares') return hacer(() => publicarPalmares(competicion(b.dataset.comp)), 'Palmarés publicado');
+  if (a === 'guardar-resultados') return hacer(() => guardarResultados(Number(b.dataset.dia), b.dataset.publicar === '1'), b.dataset.publicar === '1' ? 'Resultados publicados ✓' : 'Borrador guardado');
+  if (a === 'elegir-fotos-resultados') return document.getElementById('fotos-resultados').click();
+  if (a === 'elegir-fotos-evento') return document.getElementById('fotos-evento').click();
+  if (a === 'ocultar-foto') return hacer(() => q(sb.from('fotos').update({ visible: b.dataset.visible === '1' }).eq('id', Number(b.dataset.foto))));
+});
+function confirmar(txt) { return window.confirm(txt); }
+
+document.addEventListener('change', async ev => {
+  const t = ev.target, k = t.dataset && t.dataset.cambio; if (!k) return;
+  if (k === 'yo') { yo = t.value; guardar('tecnatom_jugador_id', yo); return pintar(); }
+  if (!D.admin) return;
+  if (k === 'hcp') { const h = num(t.value); if (h == null || !(h >= -10 && h <= 54)) return aviso('Hándicap no válido', true); return hacer(() => q(sb.from('jugadores').update({ hcp: h }).eq('id', Number(t.dataset.jugador))), 'Hándicap guardado'); }
+  if (k === 'cuota') return hacer(() => q(sb.from('temporada_jugadores').update({ cuota_pagada: t.checked }).eq('temporada', TEMPORADA).eq('jugador_id', Number(t.dataset.jugador))), t.checked ? 'Cuota pagada' : 'Cuota pendiente');
+  if (k === 'dia-resultados') { location.hash = '#/admin/resultados/' + t.value; return; }
+  if (k === 'comp-fotos') { location.hash = '#/admin/fotos/' + t.value; return; }
+  if (k === 'pie') return hacer(() => q(sb.from('fotos').update({ pie: t.value.trim().slice(0, 200) || null }).eq('id', Number(t.dataset.foto))), 'Pie guardado');
+  if (k === 'subir-resultados') return hacer(() => subirFotosResultados(Number(t.dataset.dia), [...t.files]), 'Fotos subidas');
+  if (k === 'subir-fotos') return hacer(() => subirFotosEvento(competicion(t.dataset.comp), [...t.files]), 'Fotos publicadas');
+});
+
+document.addEventListener('submit', async ev => {
+  const f = ev.target.closest('[data-form]'); if (!f) return;
+  ev.preventDefault();
+  const v = Object.fromEntries(new FormData(f).entries()), k = f.dataset.form;
+  if (k === 'entrar') {
+    const { error } = await sb.auth.signInWithPassword({ email: v.email.trim().toLowerCase(), password: v.clave });
+    if (error) return aviso('Correo o contraseña incorrectos', true);
+    await comprobarAdmin(); await cargar(); location.hash = '#/admin/competiciones'; return pintar();
+  }
+  if (k === 'nueva-clave') {
+    const { error } = await sb.auth.updateUser({ password: v.clave });
+    if (error) return aviso(errorLegible(error), true);
+    aviso('Contraseña guardada'); await comprobarAdmin(); await cargar(); location.hash = '#/admin/competiciones'; return pintar();
+  }
+  if (!D.admin) return;
+  if (k === 'nuevo-jugador') return hacer(async () => {
+    const h = num(v.hcp); if (h == null || !(h >= -10 && h <= 54)) throw new Error('Hándicap no válido');
+    const nuevo = await q(sb.from('jugadores').insert({ nombre: v.nombre.trim(), sexo: v.sexo, hcp: h, licencia: v.licencia.trim() || null }).select('id'));
+    await q(sb.from('temporada_jugadores').insert({ temporada: TEMPORADA, jugador_id: nuevo[0].id }));
+  }, 'Jugador dado de alta');
+  if (k === 'competicion') return hacer(() => {
+    const cambios = { nombre: v.nombre.trim(), insc_abre_dias: ent(v.insc_abre_dias), insc_cierra_dias: ent(v.insc_cierra_dias), insc_cierra_hora: v.insc_cierra_hora || '14:00' };
+    ['mejores_tarjetas', 'premios_scratch', 'premios_hcp'].forEach(x => { if (x in v) cambios[x] = ent(v[x]); });
+    if ('ryder_modalidad' in v) { cambios.ryder_modalidad = v.ryder_modalidad.trim() || null; cambios.ryder_regla = v.ryder_regla || null; }
+    return q(sb.from('competiciones').update(cambios).eq('id', Number(f.dataset.id)));
+  }, 'Ajustes guardados');
+  if (k === 'dia') return hacer(() => q(sb.from('dias').update({
+    fecha: v.fecha || null, hora: v.hora.trim() || null, campo: v.campo.trim() || null, par: ent(v.par),
+    cr_h: num(v.cr_h), slope_h: ent(v.slope_h), cr_m: num(v.cr_m), slope_m: ent(v.slope_m)
+  }).eq('id', Number(f.dataset.id))), 'Día guardado');
+  if (k === 'apuntar-admin') return hacer(() => q(sb.from('inscripciones_dias').insert({ dia_id: Number(f.dataset.dia), jugador_id: Number(v.jugador) })), 'Apuntado');
+  if (k === 'nuevo-equipo') return hacer(() => q(sb.from('equipos').insert({ competicion_id: Number(f.dataset.comp), bando: v.bando.trim(), nombre: v.nombre.trim() })), 'Equipo añadido');
+  if (k === 'equipo') return hacer(async () => {
+    await q(sb.from('equipos').update({ puntos: num(v.puntos) }).eq('id', Number(f.dataset.id)));
+    if (v.jugador) await q(sb.from('equipos_jugadores').insert({ equipo_id: Number(f.dataset.id), jugador_id: Number(v.jugador) }));
+  }, 'Equipo guardado');
+  if (k === 'premio-especial') return hacer(() => q(sb.from('premios').insert({ competicion_id: Number(f.dataset.comp), categoria: 'especial', nombre: v.nombre.trim(), jugador_id: Number(v.jugador), orden: 100 })), 'Premio añadido');
+});
+
+async function guardarResultados(diaId, publicar) {
+  const filas = [...document.querySelectorAll('[data-fila-res]')].map(tr => ({
+    dia_id: diaId, jugador_id: Number(tr.dataset.filaRes),
+    stableford: ent(tr.querySelector('[name=stb]').value), scratch: ent(tr.querySelector('[name=scr]').value),
+    dudoso: false, publicado: publicar, actualizado_en: new Date().toISOString()
+  })).filter(r => r.stableford != null || r.scratch != null);
+  if (!filas.length) throw new Error('No hay puntos que guardar');
+  if (filas.some(r => (r.stableford != null && (r.stableford < 0 || r.stableford > 99)) || (r.scratch != null && (r.scratch < 0 || r.scratch > 99)))) throw new Error('Hay puntos fuera de rango (0–99)');
+  await q(sb.from('resultados_dias').upsert(filas, { onConflict: 'dia_id,jugador_id' }));
+  const quedan = D.borradores.filter(r => r.dia_id === diaId && !filas.some(x => x.jugador_id === r.jugador_id)).map(r => r.jugador_id);
+  if (quedan.length) await q(sb.from('resultados_dias').delete().eq('dia_id', diaId).in('jugador_id', quedan));
+}
+async function publicarPalmares(c) {
+  await q(sb.from('premios').delete().eq('competicion_id', c.id).neq('categoria', 'especial'));
+  const filas = premiosCalculados(c).map((p, i) => ({ competicion_id: c.id, categoria: p.categoria, nombre: p.nombre, puesto: p.puesto, jugador_id: p.jugador_id, orden: i }));
+  if (filas.length) await q(sb.from('premios').insert(filas));
+  await q(sb.from('competiciones').update({ palmares_publicado: true }).eq('id', c.id));
+}
+
+/* ---------- fotos: se reducen en el móvil antes de subir ---------- */
+function cargarImagen(file) { return new Promise((ok, mal) => { const u = URL.createObjectURL(file), i = new Image(); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); mal(new Error('Formato de imagen no compatible: guárdala como JPG')); }; i.src = u; }); }
+function lienzo(img, w, h, lado) { const k = Math.min(1, lado / Math.max(w, h)); const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k)); const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height); return c; }
+function aJpeg(c, q2) { return new Promise((ok, mal) => c.toBlob(b => b ? ok(b) : mal(new Error('No se pudo preparar la foto')), 'image/jpeg', q2)); }
+function sello(n) { const p = madridPartes(new Date()); return p.y + dos(p.m) + dos(p.d) + '_' + dos(p.h) + dos(p.mi) + '_' + n + Math.random().toString(36).slice(2, 6); }
+async function subir(bucket, ruta, blob) { const { error } = await sb.storage.from(bucket).upload(ruta, blob, { contentType: 'image/jpeg', upsert: false, cacheControl: '31536000' }); if (error) throw error; }
+async function subirFotosResultados(diaId, files) {
+  if (!files.length) return;
+  let n = 0;
+  for (const f of files.slice(0, 12)) {
+    n++; const img = await cargarImagen(f);
+    const blob = await aJpeg(lienzo(img, img.naturalWidth, img.naturalHeight, 2400), 0.85);
+    const ruta = TEMPORADA + '/dia-' + diaId + '/' + sello(n) + '.jpg';
+    await subir('resultados', ruta, blob);
+    await q(sb.from('fotos_resultados').insert({ dia_id: diaId, ruta, subida_por: D.email }));
+  }
+  // La lectura automática de las fotos (paso 2) la hará una función del servidor cuando esté activada.
+}
+async function subirFotosEvento(c, files) {
+  if (!files.length) return;
+  let ev = D.eventosFotos.find(e => e.competicion_id === c.id);
+  if (!ev) {
+    const id = TEMPORADA + '-' + c.nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+    const primera = diasDe(c).find(d => d.fecha);
+    await q(sb.from('eventos_fotos').insert({ id, anio: TEMPORADA, nombre: c.nombre, meta: cuandoComp(c), fecha: primera ? primera.fecha : null, competicion_id: c.id }));
+    ev = { id };
+  }
+  let orden = Math.max(0, ...D.fotos.filter(f => f.evento_id === ev.id).map(f => f.orden || 0));
+  let n = 0;
+  for (const f of files.slice(0, 12)) {
+    n++; const img = await cargarImagen(f);
+    const grande = lienzo(img, img.naturalWidth, img.naturalHeight, 1600);
+    const base = TEMPORADA + '/' + ev.id + '/' + sello(n);
+    await subir('fotos', base + '.jpg', await aJpeg(grande, 0.82));
+    await subir('fotos', base + '_mini.jpg', await aJpeg(lienzo(grande, grande.width, grande.height, 640), 0.72));
+    await q(sb.from('fotos').insert({ evento_id: ev.id, bucket: 'fotos', ruta: base + '.jpg', ruta_mini: base + '_mini.jpg', orden: ++orden, visible: true }));
+  }
+}
+
+/* ---------- lista de inscritos para el campo (Excel) ---------- */
+function exportar(d) {
+  const filas = inscritos(d).map((j, i) => [i + 1, j.nombre, D.licencias[j.id] || '', hcpTxt(Math.min(j.hcp, 36)), hcpJuego(j, d) ?? '', j.sexo === 'M' ? 'Rojas' : 'Amarillas', j.comentario || '']);
+  const cab = ['Nº', 'Nombre', 'Licencia', 'HCP exacto', 'HCP juego', 'Barras', 'Comentario'];
+  const csv = '﻿' + [cab].concat(filas).map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'Inscritos_' + (d.fecha || 'dia') + '_' + String(d.campo || '').replace(/\W+/g, '_') + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- visor de fotos ---------- */
+let visor = { fotos: [], i: 0, titulo: '' };
+function visorAbrir(evId, i) { const e = D.eventosFotos.find(x => x.id === evId); visor = { fotos: D.fotos.filter(f => f.evento_id === evId && f.visible !== false), i, titulo: e ? e.nombre : '' }; visorPintar(); document.getElementById('visor').classList.remove('oculto'); }
+function visorPintar() { const f = visor.fotos[visor.i]; if (!f) return; document.getElementById('visor-img').src = urlFoto(f, false); document.getElementById('visor-pie').textContent = visor.titulo + (f.pie ? ' · ' + f.pie : '') + ' (' + (visor.i + 1) + '/' + visor.fotos.length + ')'; }
+function visorMover(p) { if (visor.fotos.length < 2) return; visor.i = (visor.i + p + visor.fotos.length) % visor.fotos.length; visorPintar(); }
+function visorCerrar() { document.getElementById('visor').classList.add('oculto'); document.getElementById('visor-img').removeAttribute('src'); }
+document.addEventListener('keydown', e => { if (document.getElementById('visor').classList.contains('oculto')) return; if (e.key === 'Escape') visorCerrar(); if (e.key === 'ArrowLeft') visorMover(-1); if (e.key === 'ArrowRight') visorMover(1); });
+
+/* ---------- arranque ---------- */
+sb.auth.onAuthStateChange(evt => { if (evt === 'PASSWORD_RECOVERY') location.hash = '#/admin/nueva-clave'; });
+(async () => {
+  try { await comprobarAdmin(); await cargar(); }
+  catch (e) { console.error(e); document.getElementById('app').innerHTML = '<div class="tarjeta vacio">No se ha podido cargar la temporada. Comprueba la conexión y vuelve a intentarlo.</div>'; return; }
+  document.getElementById('pie-texto').textContent = (D.temporada.edicion ? D.temporada.edicion + ' Campeonato · ' : '') + 'Temporada ' + TEMPORADA;
+  pintar();
+})();
+</script>
+</body>
+</html>
