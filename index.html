@@ -199,7 +199,7 @@ input.celda.dudosa { border: 2px solid var(--oro); }
    ===================================================================== */
 const TEMPORADA = 2027;
 const SB_URL = 'https://peztstoiswhmlmpyhefl.supabase.co';
-const SB_CLAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlenRzdG9pc3dobWxtcHloZWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1Mzk5MTMsImV4cCI6MjA5NzExNTkxM30.D-e9iyp8tXU_mQ8Jd7fx3qL36cyW6hOdJF7hSIAnxqU';   // clave pública de solo lectura; la seguridad la pone la base de datos
+const SB_CLAVE = '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlenRzdG9pc3dobWxtcHloZWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1Mzk5MTMsImV4cCI6MjA5NzExNTkxM30.D-e9iyp8tXU_mQ8Jd7fx3qL36cyW6hOdJF7hSIAnxqU"';   // clave pública de solo lectura; la seguridad la pone la base de datos
 const SB_FOTOS = SB_URL + '/storage/v1/object/public';
 const ARCHIVO_TEMPORADA = 'https://clubdegolfdetecnatom.github.io/temporada' + TEMPORADA + '.html';
 
@@ -211,7 +211,7 @@ const sb = window.supabase.createClient(SB_URL, SB_CLAVE, { auth: { persistSessi
 const D = {
   temporada: null, competiciones: [], dias: [], jugadores: [], tj: [], inscripciones: [], resultados: [],
   equipos: [], equiposJug: [], premios: [], eventosFotos: [], fotos: [],
-  admin: false, email: null, licencias: {}, borradores: [], fotosRes: []
+  admin: false, email: null, licencias: {}, borradores: [], fotosRes: [], campos: []
 };
 const V = { tipo: 'stableford' };      // pestaña de clasificación elegida
 let yo = leer('tecnatom_jugador_id');
@@ -336,12 +336,14 @@ function resultadoRyder(c) {
 /* ---------- carga ---------- */
 async function q(consulta) { const { data, error } = await consulta; if (error) throw error; return data || []; }
 async function cargar() {
-  const [temps, comps, tj, jugs] = await Promise.all([
+  const [temps, comps, tj, jugs, campos] = await Promise.all([
     q(sb.from('temporadas').select('anio,edicion,estado').eq('anio', TEMPORADA)),
     q(sb.from('competiciones').select('*').eq('temporada', TEMPORADA).order('orden')),
     q(sb.from('temporada_jugadores').select('jugador_id,activo,baja_desde,cuota_pagada').eq('temporada', TEMPORADA)),
-    q(sb.from('jugadores').select('id,nombre,sexo,hcp'))
+    q(sb.from('jugadores').select('id,nombre,sexo,hcp')),
+    q(sb.from('campos').select('*').order('nombre'))
   ]);
+  D.campos = campos;
   D.temporada = temps[0] || { anio: TEMPORADA, edicion: '', estado: 'preparacion' };
   D.competiciones = comps; D.tj = tj; D.jugadores = jugs.map(j => Object.assign(j, { hcp: Number(j.hcp) }));
   const cids = comps.map(c => c.id);
@@ -577,7 +579,7 @@ function vistaEntrarForm() {
     '<button class="boton">Entrar</button><button type="button" class="enlace" style="border:none;background:none;align-self:center" data-accion="olvido">He olvidado mi contraseña</button></form>';
 }
 function cabeceraAdmin(activa) {
-  const pest = [['jugadores', 'Jugadores'], ['competiciones', 'Competiciones'], ['resultados', 'Resultados'], ['fotos', 'Fotos']];
+  const pest = [['jugadores', 'Jugadores'], ['competiciones', 'Competiciones'], ['resultados', 'Resultados'], ['campos', 'Campos'], ['fotos', 'Fotos']];
   return '<section class="cabecera-admin"><div style="flex:1 1 220px"><h1>Administración ' + TEMPORADA + '</h1><div class="quien">' + esc(D.email) + '</div></div>' +
     '<a class="boton boton-pequeno" style="background:rgba(255,255,255,0.14)" href="#/admin/nueva-clave">Cambiar contraseña</a><button class="boton boton-pequeno" style="background:rgba(255,255,255,0.14)" data-accion="salir">Salir</button>' +
     '<nav class="pestanas" style="flex-basis:100%;margin-top:0" aria-label="Secciones de administración">' + pest.map(([h, t]) => '<a href="#/admin/' + h + '" class="' + (activa === h ? 'activa' : '') + '">' + t + '</a>').join('') + '</nav></section>';
@@ -589,6 +591,7 @@ function vistaAdmin(r) {
   if (s === 'dia') return cabeceraAdmin('competiciones') + adminDia(dia(r[1]));
   if (s === 'resultados') return cabeceraAdmin('resultados') + adminResultados(r[1]);
   if (s === 'fotos') return cabeceraAdmin('fotos') + adminFotos(r[1]);
+  if (s === 'campos') return cabeceraAdmin('campos') + adminCampos(r[1]);
   return cabeceraAdmin('competiciones') + '<div class="tarjeta lista">' + D.competiciones.map(c => '<a class="fila" href="#/admin/c/' + c.id + '"><span class="crece"><span class="nombre">' + esc(c.nombre) + '</span><span class="sub">' + esc(cuandoComp(c)) + '</span></span><span class="pastilla ' + estado(c).cls + '">' + estado(c).txt + '</span></a>').join('') + '</div>';
 }
 function adminJugadores() {
@@ -630,13 +633,15 @@ function adminDia(d) {
   const val = (k) => d[k] == null ? '' : esc(String(d[k]));
   const form = '<form data-form="dia" data-id="' + d.id + '" class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:12px"><h2>Fecha y campo</h2><div class="rejilla">' +
     '<label class="campo">Fecha<input type="date" name="fecha" value="' + val('fecha') + '"/></label><label class="campo">Hora<input name="hora" value="' + val('hora') + '" placeholder="Salidas 9:00"/></label>' +
-    '<label class="campo" style="grid-column:1/-1">Campo<input name="campo" value="' + val('campo') + '"/></label>' +
+    '<label class="campo" style="grid-column:1/-1">Campo<select name="campo_id" data-cambio="elegir-campo"><option value="">Otro (escribir el nombre abajo)</option>' + D.campos.map(k => '<option value="' + k.id + '"' + (d.campo_id === k.id ? ' selected' : '') + '>' + esc(k.nombre) + '</option>').join('') + '</select></label>' +
+    '<label class="campo" style="grid-column:1/-1">Nombre del campo<input name="campo" value="' + val('campo') + '"/></label>' +
     '<label class="campo">Par<input name="par" inputmode="numeric" value="' + val('par') + '"/></label>' +
     '<label class="campo">CR amarillas<input name="cr_h" inputmode="decimal" value="' + val('cr_h') + '"/></label><label class="campo">Slope amarillas<input name="slope_h" inputmode="numeric" value="' + val('slope_h') + '"/></label>' +
     '<label class="campo">CR rojas<input name="cr_m" inputmode="decimal" value="' + val('cr_m') + '"/></label><label class="campo">Slope rojas<input name="slope_m" inputmode="numeric" value="' + val('slope_m') + '"/></label></div>' +
+    (recorrido(d) ? '' : '<p class="subtitulo" style="margin:0">Para imprimir las tarjetas con metros, par y hándicap de cada hoyo, elige un campo del listado que tenga el recorrido (<a href="#/admin/campos">Campos</a>).</p>') +
     '<p class="subtitulo" style="margin:0">' + (p ? 'Plazo: se abre el ' + esc(momento(p.abre)) + ' y se cierra el ' + esc(momento(p.cierra)) + '.' : 'Con fecha y campo se abre la inscripción según el plazo de la competición.') + '</p>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="boton">Guardar</button><button type="button" class="boton boton-peligro" data-accion="borrar-dia" data-dia="' + d.id + '">Quitar este día</button></div></form>';
-  const lista = '<div class="tarjeta"><div class="fila" style="justify-content:space-between"><h2>Inscritos · ' + l.length + '</h2><button class="boton boton-sec boton-pequeno" data-accion="exportar" data-dia="' + d.id + '">Descargar lista</button></div><div class="tabla-caja"><table><thead><tr><th>#</th><th>Jugador</th><th>Licencia</th><th class="num">Hcp</th><th class="num">Juego</th><th>Barras</th><th></th></tr></thead><tbody>' +
+  const lista = '<div class="tarjeta"><div class="fila" style="justify-content:space-between"><h2>Inscritos · ' + l.length + '</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="boton boton-pequeno" data-accion="tarjetas" data-dia="' + d.id + '">Tarjetas (PDF)</button><button class="boton boton-sec boton-pequeno" data-accion="exportar" data-dia="' + d.id + '">Descargar lista</button></div></div><div class="tabla-caja"><table><thead><tr><th>#</th><th>Jugador</th><th>Licencia</th><th class="num">Hcp</th><th class="num">Juego</th><th>Barras</th><th></th></tr></thead><tbody>' +
     l.map((j, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + esc(j.nombre) + '</b>' + (j.comentario ? '<div class="subtitulo">' + esc(j.comentario) + '</div>' : '') + '</td><td>' + esc(D.licencias[j.id] || '—') + '</td><td class="num">' + hcpTxt(Math.min(j.hcp, 36)) + '</td><td class="num">' + (hcpJuego(j, d) ?? '—') + '</td><td>' + (j.sexo === 'M' ? 'Rojas' : 'Amarillas') + '</td><td><button class="boton boton-peligro boton-pequeno" data-accion="quitar-inscrito" data-dia="' + d.id + '" data-jugador="' + j.id + '">Quitar</button></td></tr>').join('') +
     '</tbody></table></div><form data-form="apuntar-admin" data-dia="' + d.id + '" class="tarjeta-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="campo" style="flex:1 1 220px">Apuntar a alguien (también fuera de plazo)<select name="jugador">' + enAlta().filter(j => !apuntado(d, j.id)).map(j => '<option value="' + j.id + '">' + esc(j.nombre) + '</option>').join('') + '</select></label><button class="boton">Apuntar</button></form></div>';
   return '<a class="enlace" href="#/admin/c/' + c.id + '">‹ ' + esc(c.nombre) + '</a><h1 style="font-size:26px">' + esc((nombreDia(d) || 'Día') + ' · ' + (d.campo || 'campo por definir')) + '</h1><div class="columnas"><div class="col-principal">' + lista + '</div><aside class="col-lateral">' + form + '</aside></div>';
@@ -726,6 +731,13 @@ document.addEventListener('click', async ev => {
   if (a === 'borrar-dia') { if (!confirmar('¿Quitar este día? Se borran también sus inscripciones y resultados.')) return; const c = dia(b.dataset.dia).competicion_id; await hacer(() => q(sb.from('dias').delete().eq('id', Number(b.dataset.dia))), 'Día quitado'); location.hash = '#/admin/c/' + c; return; }
   if (a === 'quitar-inscrito') return hacer(() => q(sb.from('inscripciones_dias').delete().eq('dia_id', Number(b.dataset.dia)).eq('jugador_id', Number(b.dataset.jugador))), 'Quitado de la lista');
   if (a === 'exportar') return exportar(dia(b.dataset.dia));
+  if (a === 'tarjetas') {
+    b.disabled = true; const txt = b.textContent; b.textContent = 'Preparando…';
+    try { const n = await generarTarjetas(dia(b.dataset.dia)); aviso(n); }
+    catch (e) { console.error(e); aviso(errorLegible(e), true); }
+    finally { b.disabled = false; b.textContent = txt; }
+    return;
+  }
   if (a === 'borrar-equipo') { if (!confirmar('¿Quitar este equipo?')) return; } if (a === 'borrar-equipo') return hacer(() => q(sb.from('equipos').delete().eq('id', Number(b.dataset.equipo))), 'Equipo quitado');
   if (a === 'sacar-de-equipo') return hacer(() => q(sb.from('equipos_jugadores').delete().eq('equipo_id', Number(b.dataset.equipo)).eq('jugador_id', Number(b.dataset.jugador))));
   if (a === 'publicar-ryder') return hacer(() => q(sb.from('equipos').update({ publicado: true }).eq('competicion_id', Number(b.dataset.comp))), 'Ryder publicada');
@@ -744,6 +756,13 @@ document.addEventListener('change', async ev => {
   if (!D.admin) return;
   if (k === 'hcp') { const h = num(t.value); if (h == null || !(h >= -10 && h <= 54)) return aviso('Hándicap no válido', true); return hacer(() => q(sb.from('jugadores').update({ hcp: h }).eq('id', Number(t.dataset.jugador))), 'Hándicap guardado'); }
   if (k === 'cuota') return hacer(() => q(sb.from('temporada_jugadores').update({ cuota_pagada: t.checked }).eq('temporada', TEMPORADA).eq('jugador_id', Number(t.dataset.jugador))), t.checked ? 'Cuota pagada' : 'Cuota pendiente');
+  if (k === 'elegir-campo') {
+    const c = D.campos.find(x => x.id === Number(t.value)), f = t.form; if (!c) return;
+    const poner = (n, v) => { if (f.elements[n] && v != null) f.elements[n].value = typeof v === 'string' && n === 'campo' ? v : String(v).replace('.', ','); };
+    poner('campo', c.nombre); if (c.par) poner('par', c.par.reduce((a, b) => a + b, 0));
+    poner('cr_h', c.cr_h); poner('slope_h', c.slope_h); poner('cr_m', c.cr_m); poner('slope_m', c.slope_m);
+    return aviso('Datos de ' + c.nombre + ' copiados: pulsa Guardar');
+  }
   if (k === 'dia-resultados') { location.hash = '#/admin/resultados/' + t.value; return; }
   if (k === 'comp-fotos') { location.hash = '#/admin/fotos/' + t.value; return; }
   if (k === 'pie') return hacer(() => q(sb.from('fotos').update({ pie: t.value.trim().slice(0, 200) || null }).eq('id', Number(t.dataset.foto))), 'Pie guardado');
@@ -778,9 +797,19 @@ document.addEventListener('submit', async ev => {
     return q(sb.from('competiciones').update(cambios).eq('id', Number(f.dataset.id)));
   }, 'Ajustes guardados');
   if (k === 'dia') return hacer(() => q(sb.from('dias').update({
-    fecha: v.fecha || null, hora: v.hora.trim() || null, campo: v.campo.trim() || null, par: ent(v.par),
+    fecha: v.fecha || null, hora: v.hora.trim() || null, campo: v.campo.trim() || null, par: ent(v.par), campo_id: v.campo_id ? Number(v.campo_id) : null,
     cr_h: num(v.cr_h), slope_h: ent(v.slope_h), cr_m: num(v.cr_m), slope_m: ent(v.slope_m)
   }).eq('id', Number(f.dataset.id))), 'Día guardado');
+  if (k === 'campo') return hacer(async () => {
+    const fila = {
+      nombre: v.nombre.trim(), cr_h: num(v.cr_h), slope_h: ent(v.slope_h), cr_m: num(v.cr_m), slope_m: ent(v.slope_m),
+      par: leer18(v.par, 'Par', 3, 6), si: leer18(v.si, 'Hándicap de los hoyos', 1, 18), metros_h: leer18(v.metros_h, 'Metros amarillas', 30, 700), metros_m: leer18(v.metros_m, 'Metros rojas', 30, 700)
+    };
+    if (fila.si && new Set(fila.si).size !== 18) throw new Error('Hándicap de los hoyos: cada número del 1 al 18 debe salir una sola vez');
+    if (f.dataset.id) await q(sb.from('campos').update(fila).eq('id', Number(f.dataset.id)));
+    else await q(sb.from('campos').insert(fila));
+    location.hash = '#/admin/campos';
+  }, 'Campo guardado');
   if (k === 'apuntar-admin') return hacer(() => q(sb.from('inscripciones_dias').insert({ dia_id: Number(f.dataset.dia), jugador_id: Number(v.jugador) })), 'Apuntado');
   if (k === 'nuevo-equipo') return hacer(() => q(sb.from('equipos').insert({ competicion_id: Number(f.dataset.comp), bando: v.bando.trim(), nombre: v.nombre.trim() })), 'Equipo añadido');
   if (k === 'equipo') return hacer(async () => {
@@ -857,6 +886,157 @@ function exportar(d) {
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   a.download = 'Inscritos_' + (d.fecha || 'dia') + '_' + String(d.campo || '').replace(/\W+/g, '_') + '.csv';
   document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- campos y tarjetas de juego ---------- */
+function leer18(txt, nombre, min, max) {
+  const p = String(txt || '').trim().split(/[\s,;]+/).filter(Boolean);
+  if (!p.length) return null;
+  const n = p.map(Number);
+  if (n.length !== 18 || n.some(x => !Number.isInteger(x) || x < min || x > max)) throw new Error(nombre + ': hacen falta 18 números (' + n.length + ' escritos)');
+  return n;
+}
+const suma = a => (a || []).reduce((x, y) => x + y, 0);
+function campoDe(d) { return D.campos.find(c => c.id === d.campo_id) || D.campos.find(c => d.campo && c.nombre.toLowerCase() === String(d.campo).trim().toLowerCase()) || null; }
+function recorrido(d) { const c = campoDe(d); return c && c.par && c.si ? c : null; }
+function adminCampos(id) {
+  if (id) {
+    const c = id === 'nuevo' ? {} : D.campos.find(x => x.id === Number(id));
+    if (!c) return '<div class="tarjeta vacio">No existe.</div>';
+    const val = k => c[k] == null ? '' : esc(String(c[k]).replace('.', ','));
+    const fila18 = (k, t, ayuda) => '<label class="campo" style="grid-column:1/-1">' + t + '<input name="' + k + '" value="' + (c[k] ? c[k].join(' ') : '') + '" placeholder="' + ayuda + '" autocomplete="off"/></label>';
+    return '<a class="enlace" href="#/admin/campos">‹ Campos</a><form data-form="campo"' + (c.id ? ' data-id="' + c.id + '"' : '') + ' class="tarjeta tarjeta-pad" style="display:flex;flex-direction:column;gap:12px;max-width:760px"><h2>' + (c.id ? esc(c.nombre) : 'Nuevo campo') + '</h2>' +
+      '<label class="campo">Nombre<input name="nombre" value="' + val('nombre') + '" required minlength="3" maxlength="80"/></label>' +
+      '<div class="rejilla"><label class="campo">CR amarillas<input name="cr_h" inputmode="decimal" value="' + val('cr_h') + '"/></label><label class="campo">Slope amarillas<input name="slope_h" inputmode="numeric" value="' + val('slope_h') + '"/></label>' +
+      '<label class="campo">CR rojas<input name="cr_m" inputmode="decimal" value="' + val('cr_m') + '"/></label><label class="campo">Slope rojas<input name="slope_m" inputmode="numeric" value="' + val('slope_m') + '"/></label></div>' +
+      '<p class="subtitulo" style="margin:0">Recorrido: los 18 hoyos en orden, separados por espacios. Están en la tarjeta del campo o en su ficha de la RFEG.</p><div class="rejilla">' +
+      fila18('par', 'Par de cada hoyo', '4 4 3 5 …') + fila18('si', 'Hándicap de cada hoyo (1 a 18)', '7 1 15 3 …') + fila18('metros_h', 'Metros amarillas', '402 415 179 …') + fila18('metros_m', 'Metros rojas', '355 340 127 …') +
+      '</div>' + (c.par ? '<p class="subtitulo" style="margin:0">Par ' + suma(c.par) + (c.metros_h ? ' · amarillas ' + suma(c.metros_h) + ' m' : '') + (c.metros_m ? ' · rojas ' + suma(c.metros_m) + ' m' : '') + '</p>' : '') +
+      '<button class="boton">Guardar campo</button></form>';
+  }
+  return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="titulo-seccion">Campos · ' + D.campos.length + '</h2><a class="boton boton-pequeno" href="#/admin/campos/nuevo">Añadir campo</a></div>' +
+    '<p class="subtitulo">Cada campo guarda su recorrido para imprimir las tarjetas. En cada día se elige el campo del listado.</p>' +
+    (D.campos.length ? '<div class="tarjeta lista">' + D.campos.map(c => '<a class="fila" href="#/admin/campos/' + c.id + '"><span class="crece"><span class="nombre">' + esc(c.nombre) + '</span><span class="sub">' + (c.par ? 'Par ' + suma(c.par) : 'Sin recorrido') + (c.cr_h != null ? ' · amarillas ' + hcpTxt(c.cr_h) + ' / ' + c.slope_h : '') + (c.cr_m != null ? ' · rojas ' + hcpTxt(c.cr_m) + ' / ' + c.slope_m : ' · faltan las rojas') + '</span></span>' + (c.par && c.si ? '' : '<span class="pastilla p-prox">Falta recorrido</span>') + '›</a>').join('') + '</div>' : '<div class="tarjeta vacio">Sin campos todavía.</div>');
+}
+
+let cargaJsPDF = null;
+function cargarScript(src) { return new Promise((ok, mal) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => mal(new Error('No se pudo cargar el generador de PDF. Comprueba la conexión.')); document.head.appendChild(s); }); }
+async function jsPDFListo() {
+  if (!(window.jspdf && window.jspdf.jsPDF)) { cargaJsPDF = cargaJsPDF || cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); await cargaJsPDF; }
+  return window.jspdf.jsPDF;
+}
+function logoTarjeta() {
+  return new Promise(ok => { const i = new Image(); i.onload = () => { try { const c = document.createElement('canvas'); c.width = i.naturalWidth; c.height = i.naturalHeight; c.getContext('2d').drawImage(i, 0, 0); ok({ url: c.toDataURL('image/jpeg', 0.92), w: c.width, h: c.height }); } catch (e) { ok(null); } }; i.onerror = () => ok(null); i.src = 'cdgdt.jpg'; });
+}
+const golpesHoyo = (h, si) => h >= si ? Math.floor((h - si) / 18) + 1 : 0;
+
+/* Tarjetas de juego de un día: formato oficial del club, 3 por hoja A4, en gris para imprimir */
+async function generarTarjetas(d) {
+  const l = inscritos(d);
+  if (!l.length) throw new Error('No hay nadie inscrito en este día');
+  const [JsPDF, logo] = await Promise.all([jsPDFListo(), logoTarjeta()]);
+  const c = competicion(d.competicion_id), campo = recorrido(d);
+  const PAR = campo ? campo.par : [], SI = campo ? campo.si : [], MH = campo && campo.metros_h || [], MM = campo && campo.metros_m || [];
+  const anio = d.fecha ? Number(d.fecha.slice(0, 4)) : TEMPORADA;
+  const T1 = ((D.temporada.edicion ? D.temporada.edicion + ' ' : '') + 'Campeonato de Golf de Tecnatom ' + TEMPORADA).toUpperCase();
+  const T2 = (campo && campo.nombre) || d.campo || 'Campo por definir';
+  const FECHA = [c.nombre, nombreDia(d), d.fecha ? fechaLarga(d.fecha) + ' de ' + anio : 'Fecha por definir'].filter(Boolean).join(' · ');
+
+  const doc = new JsPDF({ unit: 'pt', format: 'a4' });
+  const PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight();
+  const MARGEN = 16, HUECO = 14, POR_HOJA = 3;
+  const U = { t1: 20.1, t2: 15.95, fecha: 14.1, jug: 20.1, hdr: 15.95, data: 14.1, parhcp: 15.95, input: 21, foot: 15.95, marc: 21 };
+  const tot = U.t1 + U.t2 + U.fecha + U.jug + U.hdr + 4 * U.data + U.parhcp + 2 * U.input + U.foot + U.marc;
+  const F = ((PH - 2 * MARGEN - (POR_HOJA - 1) * HUECO) / POR_HOJA) / tot;
+  const H = Object.fromEntries(Object.entries(U).map(([k, v]) => [k, v * F]));
+  const x0 = MARGEN, ancho = PW - 2 * MARGEN, ppu = ancho / (20.7 + 18 * 10 + 12);
+  const wA = 20.7 * ppu, wH = 10 * ppu, wT = 12 * ppu;
+  const X = [x0]; for (let i = 0; i < 18; i++) X.push(x0 + wA + i * wH); X.push(x0 + wA + 18 * wH);
+  const xM = X[12], xQ = X[16], wBL = xM - X[1], wMP = xQ - xM, wQT = (X[19] + wT) - xQ, xI9 = X[9], wAI = xI9 - x0, wJL = xM - xI9;
+  const GR = '#AAAAAA', GR2 = '#555555', JUG = '#E0E0E0', CAB = '#555555', F1 = '#DDDDDD', F2 = '#F2F2F2', PH_ = '#BBBBBB', TOT = '#AAAAAA';
+  const ESTILO = { n: 'normal', b: 'bold', i: 'italic' };
+
+  const caja = (x, y, w, h, col) => { doc.setFillColor(col); doc.rect(x, y, w, h, 'F'); };
+  const texto = (x, y, w, h, s, est, tam, col, izq) => {
+    s = s == null ? '' : String(s); if (!s) return;
+    doc.setFont('helvetica', ESTILO[est || 'n']); doc.setFontSize(tam || 8); doc.setTextColor(col || '#000000');
+    const base = y + h / 2 + (tam || 8) * 0.35;
+    doc.text(s, izq ? x + 3 : x + (w - doc.getTextWidth(s)) / 2, base);
+  };
+  const lh = (x1, x2, y, lw, col) => { doc.setDrawColor(col || GR); doc.setLineWidth(lw || 0.4); doc.line(x1, y, x2, y); };
+  const lv = (x, y1, y2, lw, col) => { doc.setDrawColor(col || GR); doc.setLineWidth(lw || 0.4); doc.line(x, y1, x, y2); };
+  const rejilla = (y, h) => { doc.setDrawColor(GR); doc.setLineWidth(0.25); X.forEach(x => doc.line(x, y, x, y + h)); doc.line(X[19] + wT, y, X[19] + wT, y + h); lh(x0, x0 + ancho, y + h); };
+  const filaDatos = (y, h, etiqueta, valores, fondo, tam, negrita, conTotal) => {
+    caja(x0, y, wA, h, fondo); for (let i = 1; i <= 18; i++) caja(X[i], y, wH, h, fondo);
+    caja(X[19], y, wT, h, TOT); rejilla(y, h);
+    texto(x0, y, wA, h, etiqueta, 'b', tam - 1, null, true);
+    for (let i = 0; i < 18; i++) texto(X[i + 1], y, wH, h, valores[i], negrita ? 'b' : 'n', tam);
+    const nums = valores.filter(v => typeof v === 'number');
+    if (conTotal !== false && nums.length === 18) texto(X[19], y, wT, h, suma(nums), 'b', tam);
+  };
+  const filaVacia = (y, h, etiqueta, fondo) => {
+    caja(x0, y, wA, h, fondo); for (let i = 1; i <= 18; i++) caja(X[i], y, wH, h, fondo);
+    caja(X[19], y, wT, h, TOT); rejilla(y, h);
+    texto(x0, y, wA, h, etiqueta, 'b', 7, null, true);
+    lh(x0, x0 + ancho, y, 0.6, '#000000'); lh(x0, x0 + ancho, y + h, 0.6, '#000000');
+  };
+
+  function tarjeta(j, yTop) {
+    const hj = hcpJuego(j, d), parHcp = hj == null || !PAR.length ? [] : PAR.map((p, i) => p + golpesHoyo(hj, SI[i]));
+    const hjTxt = hj == null ? '—' : String(hj);
+    let y = yTop; const HC = H.t1 + H.t2 + H.fecha;
+    caja(x0, y, wA, HC, '#FFFFFF');
+    if (logo) { const k = Math.min((wA - 4) / logo.w, (HC - 4) / logo.h), w = logo.w * k, h = logo.h * k; doc.addImage(logo.url, 'JPEG', x0 + (wA - w) / 2, y + (HC - h) / 2, w, h); }
+    const tresCajas = (h, izq, med, der) => {
+      if (izq) texto(X[1], y, wBL, h, izq[0], izq[1], izq[2], null, izq[3]);
+      if (med) texto(xM, y, wMP, h, med, 'n', 6.5); if (der) texto(xQ, y, wQT, h, der, 'n', 6.5);
+      [X[1], X[1] + wBL, xM + wMP, xQ, xQ + wQT].forEach(x => lv(x, y, y + h));
+    };
+    lh(X[1], X[19] + wT, y); lv(xM, y, y + H.t1);
+    tresCajas(H.t1, [T1, 'b', 10, false], 'Resultado Stableford Scratch', 'Resultado Stableford Handicap'); y += H.t1;
+    lh(X[1], X[1] + wBL, y); tresCajas(H.t2, [T2, 'b', 9, true]); y += H.t2;
+    tresCajas(H.fecha, [FECHA, 'i', 8, true]); y += H.fecha;
+    lh(X[1], X[1] + wBL, y);
+    caja(x0, y, wAI + wJL, H.jug, JUG);
+    texto(x0, y, wAI, H.jug, 'JUGADOR: ' + j.nombre, 'b', 9, null, true);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); const hm = 'HCP: ' + hjTxt, twm = doc.getTextWidth(hm);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); const hs = '(' + hcpTxt(j.hcp) + ')', tws = doc.getTextWidth(hs);
+    const xs = xI9 + (wJL - twm - 3 - tws) / 2, bl = y + H.jug / 2 + 9 * 0.35;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor('#000000'); doc.text(hm, xs, bl);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(GR2); doc.text(hs, xs + twm + 3, bl - 0.5);
+    [x0, xI9 + wJL, xM, xM + wMP, xQ, xQ + wQT].forEach(x => lv(x, y, y + H.jug));
+    lh(x0, X[19] + wT, y); lh(x0, X[19] + wT, y + H.jug); y += H.jug;
+    caja(x0, y, ancho, H.hdr, CAB); rejilla(y, H.hdr);
+    texto(x0, y, wA, H.hdr, 'HOYO', 'b', 8, '#FFFFFF', true);
+    for (let i = 0; i < 18; i++) texto(X[i + 1], y, wH, H.hdr, i + 1, 'b', 8, '#FFFFFF');
+    texto(X[19], y, wT, H.hdr, 'TOTAL', 'b', 7, '#FFFFFF'); y += H.hdr;
+    filaDatos(y, H.data, 'METROS CAB.', MH, F1, 8); y += H.data;
+    filaDatos(y, H.data, 'METROS DAM.', MM, F2, 8); y += H.data;
+    filaDatos(y, H.data, 'PAR', PAR, F1, 9, true); y += H.data;
+    filaDatos(y, H.data, 'HANDICAP', SI, F2, 8, true, false); y += H.data;
+    filaDatos(y, H.parhcp, 'PAR + HCP', parHcp, PH_, 10, true); y += H.parhcp;
+    filaVacia(y, H.input, 'GOLPES', '#FFFFFF'); y += H.input;
+    filaVacia(y, H.input, 'PUNTOS', '#FFFFFF'); y += H.input;
+    const wMarc = wA + 9 * wH;
+    caja(x0, y, ancho, H.foot, '#FFFFFF');
+    texto(x0, y, wMarc, H.foot, 'MARCADOR: _________________________ FIRMA: ________', 'i', 7, null, true);
+    texto(x0 + wMarc, y, ancho - wMarc, H.foot, 'JUGADOR (' + hjTxt + '): ' + j.nombre + '   FIRMA: ________', 'i', 7, null, true);
+    doc.setDrawColor(GR); doc.setLineWidth(0.4); doc.rect(x0, y, ancho, H.foot); y += H.foot;
+    filaVacia(y, H.marc, 'GOLPES MAR.', F2); y += H.marc;
+    doc.setDrawColor('#000000'); doc.setLineWidth(1); doc.rect(x0, yTop, ancho, y - yTop);
+  }
+
+  const alto = (PH - 2 * MARGEN - (POR_HOJA - 1) * HUECO) / POR_HOJA;
+  l.forEach((j, n) => {
+    if (n && n % POR_HOJA === 0) doc.addPage();
+    tarjeta(j, MARGEN + (n % POR_HOJA) * (alto + HUECO));
+  });
+  const limpio = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  doc.save(['Tarjetas', limpio(c.nombre), limpio(nombreDia(d)), d.fecha || '', limpio(T2)].filter(Boolean).join('_') + '.pdf');
+  const faltan = [];
+  if (!campo) faltan.push('el recorrido del campo');
+  if (l.some(j => hcpJuego(j, d) == null)) faltan.push('CR y slope de ' + (l.some(j => j.sexo === 'M' && hcpJuego(j, d) == null) ? 'rojas' : 'amarillas'));
+  return l.length + ' tarjetas descargadas' + (faltan.length ? ' (sin ' + faltan.join(' ni ') + ')' : '');
 }
 
 /* ---------- visor de fotos ---------- */
